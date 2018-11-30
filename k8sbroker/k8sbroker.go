@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"sync"
 
 	"path"
@@ -14,9 +13,7 @@ import (
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/service-broker-store/brokerstore"
-	csi "github.com/container-storage-interface/spec/lib/go/csi/v0"
-	"github.com/golang/protobuf/jsonpb"
-	uuid "github.com/nu7hatch/gouuid"
+
 	"github.com/pivotal-cf/brokerapi"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -68,12 +65,17 @@ type lock interface {
 type Broker struct {
 	logger           lager.Logger
 	os               osshim.Os
-	mutex            lock
 	clock            clock.Clock
-	servicesRegistry ServicesRegistry
+	servicesRegistry Services
 	store            brokerstore.Store
 	client           kubernetes.Interface
 	namespace        string
+	mutex            *sync.Mutex
+}
+
+type NfsConfig struct {
+	Server string `json:"server"`
+	Share  string `json:"share"`
 }
 
 //go:generate counterfeiter -o k8sbroker_fake/fake_k8s_client.go . K8sClient
@@ -103,10 +105,10 @@ func New(
 	store brokerstore.Store,
 	client kubernetes.Interface,
 	namespace string,
-	servicesRegistry ServicesRegistry,
+	servicesRegistry Services,
 ) (*Broker, error) {
 
-	logger = logger.Session("new-csi-broker")
+	logger = logger.Session("new-k8s-broker")
 	logger.Info("start")
 	defer logger.Info("end")
 
@@ -128,12 +130,12 @@ func New(
 	return &theBroker, nil
 }
 
-func (b *Broker) Services(_ context.Context) []brokerapi.Service {
+func (b *Broker) Services(_ context.Context) ([]brokerapi.Service, error) {
 	logger := b.logger.Session("services")
 	logger.Info("start")
 	defer logger.Info("end")
 
-	return b.servicesRegistry.BrokerServices()
+	return b.servicesRegistry.List(), nil
 }
 
 func (b *Broker) Provision(context context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (_ brokerapi.ProvisionedServiceSpec, e error) {
@@ -141,74 +143,50 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 	logger.Info("start")
 	defer logger.Info("end")
 
-	var configuration csi.CreateVolumeRequest
+	var configuration NfsConfig
 	logger.Debug("provision-raw-parameters", lager.Data{"RawParameters": details.RawParameters})
-	err := jsonpb.UnmarshalString(string(details.RawParameters), &configuration)
+	err := json.Unmarshal(details.RawParameters, &configuration)
 	if err != nil {
 		logger.Error("provision-raw-parameters-decode-error", err)
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrRawParamsInvalid
 	}
 
-	if configuration.Name == "" {
-		return brokerapi.ProvisionedServiceSpec{}, errors.New("config requires a \"name\"")
-	}
-
-	if configuration.GetCapacityRange() == nil {
-		return brokerapi.ProvisionedServiceSpec{}, errors.New("config requires a \"capacity_range\"")
-	}
-	params := configuration.GetParameters()
-
-	if _, ok := params["server"]; !ok {
+	if configuration.Server == "" {
 		return brokerapi.ProvisionedServiceSpec{}, errors.New("config requires a \"server\"")
 	}
 
-	if _, ok := params["share"]; !ok {
+	if configuration.Share == "" {
 		return brokerapi.ProvisionedServiceSpec{}, errors.New("config requires a \"share\"")
 	}
 
-	quantity, err := resource.ParseQuantity(strconv.FormatInt(configuration.GetCapacityRange().RequiredBytes, 10))
+	quantity, err := resource.ParseQuantity("5G")
 	if err != nil {
-		logger.Error("failed-to-parse-quantity", err)
 		return brokerapi.ProvisionedServiceSpec{}, err
 	}
 
-	volumeHandle, err := uuid.NewV4()
-	if err != nil {
-		logger.Error("failed-to-generate-volume-handle", err)
-		return brokerapi.ProvisionedServiceSpec{}, err
-	}
-
-	driverName, err := b.servicesRegistry.DriverName(details.ServiceID)
-	if err != nil {
-		logger.Error("failed-to-retrieve-driver-name", err)
-		return brokerapi.ProvisionedServiceSpec{}, err
-	}
-
-	volume, err := b.client.CoreV1().PersistentVolumes().Create(&v1.PersistentVolume{
+	volumeRequest := &v1.PersistentVolume{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PersistentVolume",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   configuration.Name,
-			Labels: map[string]string{"name": configuration.Name},
+			Name:   instanceID,
+			Labels: map[string]string{"name": instanceID},
 		},
 
 		Spec: v1.PersistentVolumeSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteMany},
-			Capacity:    v1.ResourceList{v1.ResourceStorage: quantity},
+			Capacity:    v1.ResourceList{v1.ResourceName(v1.ResourceStorage): quantity},
 			PersistentVolumeSource: v1.PersistentVolumeSource{
-				CSI: &v1.CSIPersistentVolumeSource{
-					Driver:       driverName,
-					VolumeHandle: volumeHandle.String(),
-					VolumeAttributes: map[string]string{
-						"server": params["server"],
-						"share":  params["share"],
-					},
+				NFS: &v1.NFSVolumeSource{
+					Server: configuration.Server,
+					Path:   configuration.Share,
 				},
 			},
 		},
-	})
+	}
+
+	volume, err := b.client.CoreV1().PersistentVolumes().Create(volumeRequest)
 	if err != nil {
 		logger.Error("error-creating-persistent-volume", err)
 		return brokerapi.ProvisionedServiceSpec{}, err
@@ -216,7 +194,7 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 
 	defer func() {
 		if e != nil {
-			err := b.deletePersistentVolume(configuration.Name)
+			err := b.deletePersistentVolume(instanceID)
 			if err != nil {
 				logger.Error("failed-to-cleanup-persistent-volume", err, lager.Data{"volume": volume})
 			}
@@ -234,7 +212,7 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 	}()
 
 	fingerprint := ServiceFingerPrint{
-		configuration.Name,
+		instanceID,
 		volume,
 	}
 	instanceDetails := brokerstore.ServiceInstance{
@@ -262,8 +240,6 @@ func (b *Broker) Deprovision(context context.Context, instanceID string, details
 	logger.Info("start")
 	defer logger.Info("end")
 
-	var configuration csi.DeleteVolumeRequest
-
 	if instanceID == "" {
 		return brokerapi.DeprovisionServiceSpec{}, errors.New("volume deletion requires instance ID")
 	}
@@ -272,8 +248,6 @@ func (b *Broker) Deprovision(context context.Context, instanceID string, details
 	if err != nil {
 		return brokerapi.DeprovisionServiceSpec{}, brokerapi.ErrInstanceDoesNotExist
 	}
-
-	configuration.ControllerDeleteSecrets = map[string]string{}
 
 	fingerprint, err := getFingerprint(instanceDetails.ServiceFingerPrint)
 	if err != nil {
@@ -358,8 +332,9 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 		},
 
 		Spec: v1.PersistentVolumeClaimSpec{
-			AccessModes: []v1.PersistentVolumeAccessMode{k8sMode},
-			Resources:   v1.ResourceRequirements{Requests: fingerprint.Volume.Spec.Capacity},
+			AccessModes:      []v1.PersistentVolumeAccessMode{k8sMode},
+			Resources:        v1.ResourceRequirements{Requests: fingerprint.Volume.Spec.Capacity},
+			StorageClassName: &fingerprint.Volume.Spec.StorageClassName,
 			Selector: &metav1.LabelSelector{
 				MatchExpressions: []metav1.LabelSelectorRequirement{
 					{
@@ -393,12 +368,12 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	volumeId := fmt.Sprintf("%s-volume", instanceID)
 
-	ret := brokerapi.Binding{
+	return brokerapi.Binding{
 		Credentials: struct{}{}, // if nil, cloud controller chokes on response
 		VolumeMounts: []brokerapi.VolumeMount{{
 			ContainerDir: evaluateContainerPath(params, instanceID),
 			Mode:         cfMode,
-			Driver:       "csi",
+			Driver:       "nfs",
 			DeviceType:   "shared",
 			Device: brokerapi.SharedDevice{
 				VolumeId: volumeId,
@@ -407,8 +382,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 				},
 			},
 		}},
-	}
-	return ret, nil
+	}, nil
 }
 
 func (b *Broker) Unbind(context context.Context, instanceID string, bindingID string, details brokerapi.UnbindDetails) (e error) {

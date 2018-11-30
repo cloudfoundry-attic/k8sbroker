@@ -1,0 +1,8 @@
+---
+  buildpack: binary_buildpack
+  env:
+    SERVICES_CONFIG: default_services.json
+    KUBE_CONFIG: kube_config.json
+    USERNAME: admin
+    PASSWORD: admin
+    LOGLEVEL: info #error, warn, info, debug

@@ -2,2072 +2,512 @@
 package k8sbroker_fake
 
 import (
-	sync "sync"
+	"sync"
 
-	k8sbroker "code.cloudfoundry.org/k8sbroker/k8sbroker"
-	discovery "k8s.io/client-go/discovery"
-	v1alpha1 "k8s.io/client-go/kubernetes/typed/admissionregistration/v1alpha1"
-	v1beta1 "k8s.io/client-go/kubernetes/typed/admissionregistration/v1beta1"
-	v1 "k8s.io/client-go/kubernetes/typed/apps/v1"
-	v1beta1a "k8s.io/client-go/kubernetes/typed/apps/v1beta1"
-	v1beta2 "k8s.io/client-go/kubernetes/typed/apps/v1beta2"
-	v1alpha1a "k8s.io/client-go/kubernetes/typed/auditregistration/v1alpha1"
-	v1a "k8s.io/client-go/kubernetes/typed/authentication/v1"
-	v1beta1b "k8s.io/client-go/kubernetes/typed/authentication/v1beta1"
-	v1b "k8s.io/client-go/kubernetes/typed/authorization/v1"
-	v1beta1c "k8s.io/client-go/kubernetes/typed/authorization/v1beta1"
-	v1c "k8s.io/client-go/kubernetes/typed/autoscaling/v1"
-	v2beta1 "k8s.io/client-go/kubernetes/typed/autoscaling/v2beta1"
-	v2beta2 "k8s.io/client-go/kubernetes/typed/autoscaling/v2beta2"
-	v1d "k8s.io/client-go/kubernetes/typed/batch/v1"
-	v1beta1d "k8s.io/client-go/kubernetes/typed/batch/v1beta1"
-	v2alpha1 "k8s.io/client-go/kubernetes/typed/batch/v2alpha1"
-	v1beta1e "k8s.io/client-go/kubernetes/typed/certificates/v1beta1"
-	v1beta1f "k8s.io/client-go/kubernetes/typed/coordination/v1beta1"
-	v1e "k8s.io/client-go/kubernetes/typed/core/v1"
-	v1beta1g "k8s.io/client-go/kubernetes/typed/events/v1beta1"
-	v1beta1h "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
-	v1f "k8s.io/client-go/kubernetes/typed/networking/v1"
-	v1beta1i "k8s.io/client-go/kubernetes/typed/policy/v1beta1"
-	v1g "k8s.io/client-go/kubernetes/typed/rbac/v1"
-	v1alpha1b "k8s.io/client-go/kubernetes/typed/rbac/v1alpha1"
-	v1beta1j "k8s.io/client-go/kubernetes/typed/rbac/v1beta1"
-	v1alpha1c "k8s.io/client-go/kubernetes/typed/scheduling/v1alpha1"
-	v1beta1k "k8s.io/client-go/kubernetes/typed/scheduling/v1beta1"
-	v1alpha1d "k8s.io/client-go/kubernetes/typed/settings/v1alpha1"
-	v1h "k8s.io/client-go/kubernetes/typed/storage/v1"
-	v1alpha1e "k8s.io/client-go/kubernetes/typed/storage/v1alpha1"
-	v1beta1l "k8s.io/client-go/kubernetes/typed/storage/v1beta1"
+	"code.cloudfoundry.org/k8sbroker/k8sbroker"
+	"k8s.io/client-go/discovery"
+	admissionregistrationv1alpha1 "k8s.io/client-go/kubernetes/typed/admissionregistration/v1alpha1"
+	admissionregistrationv1beta1 "k8s.io/client-go/kubernetes/typed/admissionregistration/v1beta1"
+	appsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
+	appsv1beta1 "k8s.io/client-go/kubernetes/typed/apps/v1beta1"
+	appsv1beta2 "k8s.io/client-go/kubernetes/typed/apps/v1beta2"
+	auditregistrationv1alpha1 "k8s.io/client-go/kubernetes/typed/auditregistration/v1alpha1"
+	authenticationv1 "k8s.io/client-go/kubernetes/typed/authentication/v1"
+	authenticationv1beta1 "k8s.io/client-go/kubernetes/typed/authentication/v1beta1"
+	authorizationv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
+	authorizationv1beta1 "k8s.io/client-go/kubernetes/typed/authorization/v1beta1"
+	autoscalingv1 "k8s.io/client-go/kubernetes/typed/autoscaling/v1"
+	autoscalingv2beta1 "k8s.io/client-go/kubernetes/typed/autoscaling/v2beta1"
+	autoscalingv2beta2 "k8s.io/client-go/kubernetes/typed/autoscaling/v2beta2"
+	batchv1 "k8s.io/client-go/kubernetes/typed/batch/v1"
+	batchv1beta1 "k8s.io/client-go/kubernetes/typed/batch/v1beta1"
+	batchv2alpha1 "k8s.io/client-go/kubernetes/typed/batch/v2alpha1"
+	certificatesv1beta1 "k8s.io/client-go/kubernetes/typed/certificates/v1beta1"
+	coordinationv1beta1 "k8s.io/client-go/kubernetes/typed/coordination/v1beta1"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	eventsv1beta1 "k8s.io/client-go/kubernetes/typed/events/v1beta1"
+	extensionsv1beta1 "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
+	networkingv1 "k8s.io/client-go/kubernetes/typed/networking/v1"
+	policyv1beta1 "k8s.io/client-go/kubernetes/typed/policy/v1beta1"
+	rbacv1 "k8s.io/client-go/kubernetes/typed/rbac/v1"
+	rbacv1alpha1 "k8s.io/client-go/kubernetes/typed/rbac/v1alpha1"
+	rbacv1beta1 "k8s.io/client-go/kubernetes/typed/rbac/v1beta1"
+	schedulingv1alpha1 "k8s.io/client-go/kubernetes/typed/scheduling/v1alpha1"
+	schedulingv1beta1 "k8s.io/client-go/kubernetes/typed/scheduling/v1beta1"
+	settingsv1alpha1 "k8s.io/client-go/kubernetes/typed/settings/v1alpha1"
+	storagev1 "k8s.io/client-go/kubernetes/typed/storage/v1"
+	storagev1alpha1 "k8s.io/client-go/kubernetes/typed/storage/v1alpha1"
+	storagev1beta1 "k8s.io/client-go/kubernetes/typed/storage/v1beta1"
 )
 
 type FakeK8sClient struct {
-	AdmissionregistrationStub        func() v1beta1.AdmissionregistrationV1beta1Interface
-	admissionregistrationMutex       sync.RWMutex
-	admissionregistrationArgsForCall []struct {
-	}
-	admissionregistrationReturns struct {
-		result1 v1beta1.AdmissionregistrationV1beta1Interface
-	}
-	admissionregistrationReturnsOnCall map[int]struct {
-		result1 v1beta1.AdmissionregistrationV1beta1Interface
-	}
-	AdmissionregistrationV1alpha1Stub        func() v1alpha1.AdmissionregistrationV1alpha1Interface
-	admissionregistrationV1alpha1Mutex       sync.RWMutex
-	admissionregistrationV1alpha1ArgsForCall []struct {
-	}
-	admissionregistrationV1alpha1Returns struct {
-		result1 v1alpha1.AdmissionregistrationV1alpha1Interface
-	}
-	admissionregistrationV1alpha1ReturnsOnCall map[int]struct {
-		result1 v1alpha1.AdmissionregistrationV1alpha1Interface
-	}
-	AdmissionregistrationV1beta1Stub        func() v1beta1.AdmissionregistrationV1beta1Interface
-	admissionregistrationV1beta1Mutex       sync.RWMutex
-	admissionregistrationV1beta1ArgsForCall []struct {
-	}
-	admissionregistrationV1beta1Returns struct {
-		result1 v1beta1.AdmissionregistrationV1beta1Interface
-	}
-	admissionregistrationV1beta1ReturnsOnCall map[int]struct {
-		result1 v1beta1.AdmissionregistrationV1beta1Interface
-	}
-	AppsStub        func() v1.AppsV1Interface
-	appsMutex       sync.RWMutex
-	appsArgsForCall []struct {
-	}
-	appsReturns struct {
-		result1 v1.AppsV1Interface
-	}
-	appsReturnsOnCall map[int]struct {
-		result1 v1.AppsV1Interface
-	}
-	AppsV1Stub        func() v1.AppsV1Interface
-	appsV1Mutex       sync.RWMutex
-	appsV1ArgsForCall []struct {
-	}
-	appsV1Returns struct {
-		result1 v1.AppsV1Interface
-	}
-	appsV1ReturnsOnCall map[int]struct {
-		result1 v1.AppsV1Interface
-	}
-	AppsV1beta1Stub        func() v1beta1a.AppsV1beta1Interface
-	appsV1beta1Mutex       sync.RWMutex
-	appsV1beta1ArgsForCall []struct {
-	}
-	appsV1beta1Returns struct {
-		result1 v1beta1a.AppsV1beta1Interface
-	}
-	appsV1beta1ReturnsOnCall map[int]struct {
-		result1 v1beta1a.AppsV1beta1Interface
-	}
-	AppsV1beta2Stub        func() v1beta2.AppsV1beta2Interface
-	appsV1beta2Mutex       sync.RWMutex
-	appsV1beta2ArgsForCall []struct {
-	}
-	appsV1beta2Returns struct {
-		result1 v1beta2.AppsV1beta2Interface
-	}
-	appsV1beta2ReturnsOnCall map[int]struct {
-		result1 v1beta2.AppsV1beta2Interface
-	}
-	AuditregistrationStub        func() v1alpha1a.AuditregistrationV1alpha1Interface
-	auditregistrationMutex       sync.RWMutex
-	auditregistrationArgsForCall []struct {
-	}
-	auditregistrationReturns struct {
-		result1 v1alpha1a.AuditregistrationV1alpha1Interface
-	}
-	auditregistrationReturnsOnCall map[int]struct {
-		result1 v1alpha1a.AuditregistrationV1alpha1Interface
-	}
-	AuditregistrationV1alpha1Stub        func() v1alpha1a.AuditregistrationV1alpha1Interface
-	auditregistrationV1alpha1Mutex       sync.RWMutex
-	auditregistrationV1alpha1ArgsForCall []struct {
-	}
-	auditregistrationV1alpha1Returns struct {
-		result1 v1alpha1a.AuditregistrationV1alpha1Interface
-	}
-	auditregistrationV1alpha1ReturnsOnCall map[int]struct {
-		result1 v1alpha1a.AuditregistrationV1alpha1Interface
-	}
-	AuthenticationStub        func() v1a.AuthenticationV1Interface
-	authenticationMutex       sync.RWMutex
-	authenticationArgsForCall []struct {
-	}
-	authenticationReturns struct {
-		result1 v1a.AuthenticationV1Interface
-	}
-	authenticationReturnsOnCall map[int]struct {
-		result1 v1a.AuthenticationV1Interface
-	}
-	AuthenticationV1Stub        func() v1a.AuthenticationV1Interface
-	authenticationV1Mutex       sync.RWMutex
-	authenticationV1ArgsForCall []struct {
-	}
-	authenticationV1Returns struct {
-		result1 v1a.AuthenticationV1Interface
-	}
-	authenticationV1ReturnsOnCall map[int]struct {
-		result1 v1a.AuthenticationV1Interface
-	}
-	AuthenticationV1beta1Stub        func() v1beta1b.AuthenticationV1beta1Interface
-	authenticationV1beta1Mutex       sync.RWMutex
-	authenticationV1beta1ArgsForCall []struct {
-	}
-	authenticationV1beta1Returns struct {
-		result1 v1beta1b.AuthenticationV1beta1Interface
-	}
-	authenticationV1beta1ReturnsOnCall map[int]struct {
-		result1 v1beta1b.AuthenticationV1beta1Interface
-	}
-	AuthorizationStub        func() v1b.AuthorizationV1Interface
-	authorizationMutex       sync.RWMutex
-	authorizationArgsForCall []struct {
-	}
-	authorizationReturns struct {
-		result1 v1b.AuthorizationV1Interface
-	}
-	authorizationReturnsOnCall map[int]struct {
-		result1 v1b.AuthorizationV1Interface
-	}
-	AuthorizationV1Stub        func() v1b.AuthorizationV1Interface
-	authorizationV1Mutex       sync.RWMutex
-	authorizationV1ArgsForCall []struct {
-	}
-	authorizationV1Returns struct {
-		result1 v1b.AuthorizationV1Interface
-	}
-	authorizationV1ReturnsOnCall map[int]struct {
-		result1 v1b.AuthorizationV1Interface
-	}
-	AuthorizationV1beta1Stub        func() v1beta1c.AuthorizationV1beta1Interface
-	authorizationV1beta1Mutex       sync.RWMutex
-	authorizationV1beta1ArgsForCall []struct {
-	}
-	authorizationV1beta1Returns struct {
-		result1 v1beta1c.AuthorizationV1beta1Interface
-	}
-	authorizationV1beta1ReturnsOnCall map[int]struct {
-		result1 v1beta1c.AuthorizationV1beta1Interface
-	}
-	AutoscalingStub        func() v1c.AutoscalingV1Interface
-	autoscalingMutex       sync.RWMutex
-	autoscalingArgsForCall []struct {
-	}
-	autoscalingReturns struct {
-		result1 v1c.AutoscalingV1Interface
-	}
-	autoscalingReturnsOnCall map[int]struct {
-		result1 v1c.AutoscalingV1Interface
-	}
-	AutoscalingV1Stub        func() v1c.AutoscalingV1Interface
-	autoscalingV1Mutex       sync.RWMutex
-	autoscalingV1ArgsForCall []struct {
-	}
-	autoscalingV1Returns struct {
-		result1 v1c.AutoscalingV1Interface
-	}
-	autoscalingV1ReturnsOnCall map[int]struct {
-		result1 v1c.AutoscalingV1Interface
-	}
-	AutoscalingV2beta1Stub        func() v2beta1.AutoscalingV2beta1Interface
-	autoscalingV2beta1Mutex       sync.RWMutex
-	autoscalingV2beta1ArgsForCall []struct {
-	}
-	autoscalingV2beta1Returns struct {
-		result1 v2beta1.AutoscalingV2beta1Interface
-	}
-	autoscalingV2beta1ReturnsOnCall map[int]struct {
-		result1 v2beta1.AutoscalingV2beta1Interface
-	}
-	AutoscalingV2beta2Stub        func() v2beta2.AutoscalingV2beta2Interface
-	autoscalingV2beta2Mutex       sync.RWMutex
-	autoscalingV2beta2ArgsForCall []struct {
-	}
-	autoscalingV2beta2Returns struct {
-		result1 v2beta2.AutoscalingV2beta2Interface
-	}
-	autoscalingV2beta2ReturnsOnCall map[int]struct {
-		result1 v2beta2.AutoscalingV2beta2Interface
-	}
-	BatchStub        func() v1d.BatchV1Interface
-	batchMutex       sync.RWMutex
-	batchArgsForCall []struct {
-	}
-	batchReturns struct {
-		result1 v1d.BatchV1Interface
-	}
-	batchReturnsOnCall map[int]struct {
-		result1 v1d.BatchV1Interface
-	}
-	BatchV1Stub        func() v1d.BatchV1Interface
-	batchV1Mutex       sync.RWMutex
-	batchV1ArgsForCall []struct {
-	}
-	batchV1Returns struct {
-		result1 v1d.BatchV1Interface
-	}
-	batchV1ReturnsOnCall map[int]struct {
-		result1 v1d.BatchV1Interface
-	}
-	BatchV1beta1Stub        func() v1beta1d.BatchV1beta1Interface
-	batchV1beta1Mutex       sync.RWMutex
-	batchV1beta1ArgsForCall []struct {
-	}
-	batchV1beta1Returns struct {
-		result1 v1beta1d.BatchV1beta1Interface
-	}
-	batchV1beta1ReturnsOnCall map[int]struct {
-		result1 v1beta1d.BatchV1beta1Interface
-	}
-	BatchV2alpha1Stub        func() v2alpha1.BatchV2alpha1Interface
-	batchV2alpha1Mutex       sync.RWMutex
-	batchV2alpha1ArgsForCall []struct {
-	}
-	batchV2alpha1Returns struct {
-		result1 v2alpha1.BatchV2alpha1Interface
-	}
-	batchV2alpha1ReturnsOnCall map[int]struct {
-		result1 v2alpha1.BatchV2alpha1Interface
-	}
-	CertificatesStub        func() v1beta1e.CertificatesV1beta1Interface
-	certificatesMutex       sync.RWMutex
-	certificatesArgsForCall []struct {
-	}
-	certificatesReturns struct {
-		result1 v1beta1e.CertificatesV1beta1Interface
-	}
-	certificatesReturnsOnCall map[int]struct {
-		result1 v1beta1e.CertificatesV1beta1Interface
-	}
-	CertificatesV1beta1Stub        func() v1beta1e.CertificatesV1beta1Interface
-	certificatesV1beta1Mutex       sync.RWMutex
-	certificatesV1beta1ArgsForCall []struct {
-	}
-	certificatesV1beta1Returns struct {
-		result1 v1beta1e.CertificatesV1beta1Interface
-	}
-	certificatesV1beta1ReturnsOnCall map[int]struct {
-		result1 v1beta1e.CertificatesV1beta1Interface
-	}
-	CoordinationStub        func() v1beta1f.CoordinationV1beta1Interface
-	coordinationMutex       sync.RWMutex
-	coordinationArgsForCall []struct {
-	}
-	coordinationReturns struct {
-		result1 v1beta1f.CoordinationV1beta1Interface
-	}
-	coordinationReturnsOnCall map[int]struct {
-		result1 v1beta1f.CoordinationV1beta1Interface
-	}
-	CoordinationV1beta1Stub        func() v1beta1f.CoordinationV1beta1Interface
-	coordinationV1beta1Mutex       sync.RWMutex
-	coordinationV1beta1ArgsForCall []struct {
-	}
-	coordinationV1beta1Returns struct {
-		result1 v1beta1f.CoordinationV1beta1Interface
-	}
-	coordinationV1beta1ReturnsOnCall map[int]struct {
-		result1 v1beta1f.CoordinationV1beta1Interface
-	}
-	CoreStub        func() v1e.CoreV1Interface
-	coreMutex       sync.RWMutex
-	coreArgsForCall []struct {
-	}
-	coreReturns struct {
-		result1 v1e.CoreV1Interface
-	}
-	coreReturnsOnCall map[int]struct {
-		result1 v1e.CoreV1Interface
-	}
-	CoreV1Stub        func() v1e.CoreV1Interface
-	coreV1Mutex       sync.RWMutex
-	coreV1ArgsForCall []struct {
-	}
-	coreV1Returns struct {
-		result1 v1e.CoreV1Interface
-	}
-	coreV1ReturnsOnCall map[int]struct {
-		result1 v1e.CoreV1Interface
-	}
 	DiscoveryStub        func() discovery.DiscoveryInterface
 	discoveryMutex       sync.RWMutex
-	discoveryArgsForCall []struct {
-	}
-	discoveryReturns struct {
+	discoveryArgsForCall []struct{}
+	discoveryReturns     struct {
 		result1 discovery.DiscoveryInterface
 	}
 	discoveryReturnsOnCall map[int]struct {
 		result1 discovery.DiscoveryInterface
 	}
-	EventsStub        func() v1beta1g.EventsV1beta1Interface
-	eventsMutex       sync.RWMutex
-	eventsArgsForCall []struct {
+	AdmissionregistrationV1alpha1Stub        func() admissionregistrationv1alpha1.AdmissionregistrationV1alpha1Interface
+	admissionregistrationV1alpha1Mutex       sync.RWMutex
+	admissionregistrationV1alpha1ArgsForCall []struct{}
+	admissionregistrationV1alpha1Returns     struct {
+		result1 admissionregistrationv1alpha1.AdmissionregistrationV1alpha1Interface
 	}
-	eventsReturns struct {
-		result1 v1beta1g.EventsV1beta1Interface
+	admissionregistrationV1alpha1ReturnsOnCall map[int]struct {
+		result1 admissionregistrationv1alpha1.AdmissionregistrationV1alpha1Interface
 	}
-	eventsReturnsOnCall map[int]struct {
-		result1 v1beta1g.EventsV1beta1Interface
+	AdmissionregistrationV1beta1Stub        func() admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface
+	admissionregistrationV1beta1Mutex       sync.RWMutex
+	admissionregistrationV1beta1ArgsForCall []struct{}
+	admissionregistrationV1beta1Returns     struct {
+		result1 admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface
 	}
-	EventsV1beta1Stub        func() v1beta1g.EventsV1beta1Interface
+	admissionregistrationV1beta1ReturnsOnCall map[int]struct {
+		result1 admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface
+	}
+	AdmissionregistrationStub        func() admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface
+	admissionregistrationMutex       sync.RWMutex
+	admissionregistrationArgsForCall []struct{}
+	admissionregistrationReturns     struct {
+		result1 admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface
+	}
+	admissionregistrationReturnsOnCall map[int]struct {
+		result1 admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface
+	}
+	AppsV1beta1Stub        func() appsv1beta1.AppsV1beta1Interface
+	appsV1beta1Mutex       sync.RWMutex
+	appsV1beta1ArgsForCall []struct{}
+	appsV1beta1Returns     struct {
+		result1 appsv1beta1.AppsV1beta1Interface
+	}
+	appsV1beta1ReturnsOnCall map[int]struct {
+		result1 appsv1beta1.AppsV1beta1Interface
+	}
+	AppsV1beta2Stub        func() appsv1beta2.AppsV1beta2Interface
+	appsV1beta2Mutex       sync.RWMutex
+	appsV1beta2ArgsForCall []struct{}
+	appsV1beta2Returns     struct {
+		result1 appsv1beta2.AppsV1beta2Interface
+	}
+	appsV1beta2ReturnsOnCall map[int]struct {
+		result1 appsv1beta2.AppsV1beta2Interface
+	}
+	AppsV1Stub        func() appsv1.AppsV1Interface
+	appsV1Mutex       sync.RWMutex
+	appsV1ArgsForCall []struct{}
+	appsV1Returns     struct {
+		result1 appsv1.AppsV1Interface
+	}
+	appsV1ReturnsOnCall map[int]struct {
+		result1 appsv1.AppsV1Interface
+	}
+	AppsStub        func() appsv1.AppsV1Interface
+	appsMutex       sync.RWMutex
+	appsArgsForCall []struct{}
+	appsReturns     struct {
+		result1 appsv1.AppsV1Interface
+	}
+	appsReturnsOnCall map[int]struct {
+		result1 appsv1.AppsV1Interface
+	}
+	AuditregistrationV1alpha1Stub        func() auditregistrationv1alpha1.AuditregistrationV1alpha1Interface
+	auditregistrationV1alpha1Mutex       sync.RWMutex
+	auditregistrationV1alpha1ArgsForCall []struct{}
+	auditregistrationV1alpha1Returns     struct {
+		result1 auditregistrationv1alpha1.AuditregistrationV1alpha1Interface
+	}
+	auditregistrationV1alpha1ReturnsOnCall map[int]struct {
+		result1 auditregistrationv1alpha1.AuditregistrationV1alpha1Interface
+	}
+	AuditregistrationStub        func() auditregistrationv1alpha1.AuditregistrationV1alpha1Interface
+	auditregistrationMutex       sync.RWMutex
+	auditregistrationArgsForCall []struct{}
+	auditregistrationReturns     struct {
+		result1 auditregistrationv1alpha1.AuditregistrationV1alpha1Interface
+	}
+	auditregistrationReturnsOnCall map[int]struct {
+		result1 auditregistrationv1alpha1.AuditregistrationV1alpha1Interface
+	}
+	AuthenticationV1Stub        func() authenticationv1.AuthenticationV1Interface
+	authenticationV1Mutex       sync.RWMutex
+	authenticationV1ArgsForCall []struct{}
+	authenticationV1Returns     struct {
+		result1 authenticationv1.AuthenticationV1Interface
+	}
+	authenticationV1ReturnsOnCall map[int]struct {
+		result1 authenticationv1.AuthenticationV1Interface
+	}
+	AuthenticationStub        func() authenticationv1.AuthenticationV1Interface
+	authenticationMutex       sync.RWMutex
+	authenticationArgsForCall []struct{}
+	authenticationReturns     struct {
+		result1 authenticationv1.AuthenticationV1Interface
+	}
+	authenticationReturnsOnCall map[int]struct {
+		result1 authenticationv1.AuthenticationV1Interface
+	}
+	AuthenticationV1beta1Stub        func() authenticationv1beta1.AuthenticationV1beta1Interface
+	authenticationV1beta1Mutex       sync.RWMutex
+	authenticationV1beta1ArgsForCall []struct{}
+	authenticationV1beta1Returns     struct {
+		result1 authenticationv1beta1.AuthenticationV1beta1Interface
+	}
+	authenticationV1beta1ReturnsOnCall map[int]struct {
+		result1 authenticationv1beta1.AuthenticationV1beta1Interface
+	}
+	AuthorizationV1Stub        func() authorizationv1.AuthorizationV1Interface
+	authorizationV1Mutex       sync.RWMutex
+	authorizationV1ArgsForCall []struct{}
+	authorizationV1Returns     struct {
+		result1 authorizationv1.AuthorizationV1Interface
+	}
+	authorizationV1ReturnsOnCall map[int]struct {
+		result1 authorizationv1.AuthorizationV1Interface
+	}
+	AuthorizationStub        func() authorizationv1.AuthorizationV1Interface
+	authorizationMutex       sync.RWMutex
+	authorizationArgsForCall []struct{}
+	authorizationReturns     struct {
+		result1 authorizationv1.AuthorizationV1Interface
+	}
+	authorizationReturnsOnCall map[int]struct {
+		result1 authorizationv1.AuthorizationV1Interface
+	}
+	AuthorizationV1beta1Stub        func() authorizationv1beta1.AuthorizationV1beta1Interface
+	authorizationV1beta1Mutex       sync.RWMutex
+	authorizationV1beta1ArgsForCall []struct{}
+	authorizationV1beta1Returns     struct {
+		result1 authorizationv1beta1.AuthorizationV1beta1Interface
+	}
+	authorizationV1beta1ReturnsOnCall map[int]struct {
+		result1 authorizationv1beta1.AuthorizationV1beta1Interface
+	}
+	AutoscalingV1Stub        func() autoscalingv1.AutoscalingV1Interface
+	autoscalingV1Mutex       sync.RWMutex
+	autoscalingV1ArgsForCall []struct{}
+	autoscalingV1Returns     struct {
+		result1 autoscalingv1.AutoscalingV1Interface
+	}
+	autoscalingV1ReturnsOnCall map[int]struct {
+		result1 autoscalingv1.AutoscalingV1Interface
+	}
+	AutoscalingStub        func() autoscalingv1.AutoscalingV1Interface
+	autoscalingMutex       sync.RWMutex
+	autoscalingArgsForCall []struct{}
+	autoscalingReturns     struct {
+		result1 autoscalingv1.AutoscalingV1Interface
+	}
+	autoscalingReturnsOnCall map[int]struct {
+		result1 autoscalingv1.AutoscalingV1Interface
+	}
+	AutoscalingV2beta1Stub        func() autoscalingv2beta1.AutoscalingV2beta1Interface
+	autoscalingV2beta1Mutex       sync.RWMutex
+	autoscalingV2beta1ArgsForCall []struct{}
+	autoscalingV2beta1Returns     struct {
+		result1 autoscalingv2beta1.AutoscalingV2beta1Interface
+	}
+	autoscalingV2beta1ReturnsOnCall map[int]struct {
+		result1 autoscalingv2beta1.AutoscalingV2beta1Interface
+	}
+	AutoscalingV2beta2Stub        func() autoscalingv2beta2.AutoscalingV2beta2Interface
+	autoscalingV2beta2Mutex       sync.RWMutex
+	autoscalingV2beta2ArgsForCall []struct{}
+	autoscalingV2beta2Returns     struct {
+		result1 autoscalingv2beta2.AutoscalingV2beta2Interface
+	}
+	autoscalingV2beta2ReturnsOnCall map[int]struct {
+		result1 autoscalingv2beta2.AutoscalingV2beta2Interface
+	}
+	BatchV1Stub        func() batchv1.BatchV1Interface
+	batchV1Mutex       sync.RWMutex
+	batchV1ArgsForCall []struct{}
+	batchV1Returns     struct {
+		result1 batchv1.BatchV1Interface
+	}
+	batchV1ReturnsOnCall map[int]struct {
+		result1 batchv1.BatchV1Interface
+	}
+	BatchStub        func() batchv1.BatchV1Interface
+	batchMutex       sync.RWMutex
+	batchArgsForCall []struct{}
+	batchReturns     struct {
+		result1 batchv1.BatchV1Interface
+	}
+	batchReturnsOnCall map[int]struct {
+		result1 batchv1.BatchV1Interface
+	}
+	BatchV1beta1Stub        func() batchv1beta1.BatchV1beta1Interface
+	batchV1beta1Mutex       sync.RWMutex
+	batchV1beta1ArgsForCall []struct{}
+	batchV1beta1Returns     struct {
+		result1 batchv1beta1.BatchV1beta1Interface
+	}
+	batchV1beta1ReturnsOnCall map[int]struct {
+		result1 batchv1beta1.BatchV1beta1Interface
+	}
+	BatchV2alpha1Stub        func() batchv2alpha1.BatchV2alpha1Interface
+	batchV2alpha1Mutex       sync.RWMutex
+	batchV2alpha1ArgsForCall []struct{}
+	batchV2alpha1Returns     struct {
+		result1 batchv2alpha1.BatchV2alpha1Interface
+	}
+	batchV2alpha1ReturnsOnCall map[int]struct {
+		result1 batchv2alpha1.BatchV2alpha1Interface
+	}
+	CertificatesV1beta1Stub        func() certificatesv1beta1.CertificatesV1beta1Interface
+	certificatesV1beta1Mutex       sync.RWMutex
+	certificatesV1beta1ArgsForCall []struct{}
+	certificatesV1beta1Returns     struct {
+		result1 certificatesv1beta1.CertificatesV1beta1Interface
+	}
+	certificatesV1beta1ReturnsOnCall map[int]struct {
+		result1 certificatesv1beta1.CertificatesV1beta1Interface
+	}
+	CertificatesStub        func() certificatesv1beta1.CertificatesV1beta1Interface
+	certificatesMutex       sync.RWMutex
+	certificatesArgsForCall []struct{}
+	certificatesReturns     struct {
+		result1 certificatesv1beta1.CertificatesV1beta1Interface
+	}
+	certificatesReturnsOnCall map[int]struct {
+		result1 certificatesv1beta1.CertificatesV1beta1Interface
+	}
+	CoordinationV1beta1Stub        func() coordinationv1beta1.CoordinationV1beta1Interface
+	coordinationV1beta1Mutex       sync.RWMutex
+	coordinationV1beta1ArgsForCall []struct{}
+	coordinationV1beta1Returns     struct {
+		result1 coordinationv1beta1.CoordinationV1beta1Interface
+	}
+	coordinationV1beta1ReturnsOnCall map[int]struct {
+		result1 coordinationv1beta1.CoordinationV1beta1Interface
+	}
+	CoordinationStub        func() coordinationv1beta1.CoordinationV1beta1Interface
+	coordinationMutex       sync.RWMutex
+	coordinationArgsForCall []struct{}
+	coordinationReturns     struct {
+		result1 coordinationv1beta1.CoordinationV1beta1Interface
+	}
+	coordinationReturnsOnCall map[int]struct {
+		result1 coordinationv1beta1.CoordinationV1beta1Interface
+	}
+	CoreV1Stub        func() corev1.CoreV1Interface
+	coreV1Mutex       sync.RWMutex
+	coreV1ArgsForCall []struct{}
+	coreV1Returns     struct {
+		result1 corev1.CoreV1Interface
+	}
+	coreV1ReturnsOnCall map[int]struct {
+		result1 corev1.CoreV1Interface
+	}
+	CoreStub        func() corev1.CoreV1Interface
+	coreMutex       sync.RWMutex
+	coreArgsForCall []struct{}
+	coreReturns     struct {
+		result1 corev1.CoreV1Interface
+	}
+	coreReturnsOnCall map[int]struct {
+		result1 corev1.CoreV1Interface
+	}
+	EventsV1beta1Stub        func() eventsv1beta1.EventsV1beta1Interface
 	eventsV1beta1Mutex       sync.RWMutex
-	eventsV1beta1ArgsForCall []struct {
-	}
-	eventsV1beta1Returns struct {
-		result1 v1beta1g.EventsV1beta1Interface
+	eventsV1beta1ArgsForCall []struct{}
+	eventsV1beta1Returns     struct {
+		result1 eventsv1beta1.EventsV1beta1Interface
 	}
 	eventsV1beta1ReturnsOnCall map[int]struct {
-		result1 v1beta1g.EventsV1beta1Interface
+		result1 eventsv1beta1.EventsV1beta1Interface
 	}
-	ExtensionsStub        func() v1beta1h.ExtensionsV1beta1Interface
-	extensionsMutex       sync.RWMutex
-	extensionsArgsForCall []struct {
+	EventsStub        func() eventsv1beta1.EventsV1beta1Interface
+	eventsMutex       sync.RWMutex
+	eventsArgsForCall []struct{}
+	eventsReturns     struct {
+		result1 eventsv1beta1.EventsV1beta1Interface
 	}
-	extensionsReturns struct {
-		result1 v1beta1h.ExtensionsV1beta1Interface
+	eventsReturnsOnCall map[int]struct {
+		result1 eventsv1beta1.EventsV1beta1Interface
 	}
-	extensionsReturnsOnCall map[int]struct {
-		result1 v1beta1h.ExtensionsV1beta1Interface
-	}
-	ExtensionsV1beta1Stub        func() v1beta1h.ExtensionsV1beta1Interface
+	ExtensionsV1beta1Stub        func() extensionsv1beta1.ExtensionsV1beta1Interface
 	extensionsV1beta1Mutex       sync.RWMutex
-	extensionsV1beta1ArgsForCall []struct {
-	}
-	extensionsV1beta1Returns struct {
-		result1 v1beta1h.ExtensionsV1beta1Interface
+	extensionsV1beta1ArgsForCall []struct{}
+	extensionsV1beta1Returns     struct {
+		result1 extensionsv1beta1.ExtensionsV1beta1Interface
 	}
 	extensionsV1beta1ReturnsOnCall map[int]struct {
-		result1 v1beta1h.ExtensionsV1beta1Interface
+		result1 extensionsv1beta1.ExtensionsV1beta1Interface
 	}
-	NetworkingStub        func() v1f.NetworkingV1Interface
-	networkingMutex       sync.RWMutex
-	networkingArgsForCall []struct {
+	ExtensionsStub        func() extensionsv1beta1.ExtensionsV1beta1Interface
+	extensionsMutex       sync.RWMutex
+	extensionsArgsForCall []struct{}
+	extensionsReturns     struct {
+		result1 extensionsv1beta1.ExtensionsV1beta1Interface
 	}
-	networkingReturns struct {
-		result1 v1f.NetworkingV1Interface
+	extensionsReturnsOnCall map[int]struct {
+		result1 extensionsv1beta1.ExtensionsV1beta1Interface
 	}
-	networkingReturnsOnCall map[int]struct {
-		result1 v1f.NetworkingV1Interface
-	}
-	NetworkingV1Stub        func() v1f.NetworkingV1Interface
+	NetworkingV1Stub        func() networkingv1.NetworkingV1Interface
 	networkingV1Mutex       sync.RWMutex
-	networkingV1ArgsForCall []struct {
-	}
-	networkingV1Returns struct {
-		result1 v1f.NetworkingV1Interface
+	networkingV1ArgsForCall []struct{}
+	networkingV1Returns     struct {
+		result1 networkingv1.NetworkingV1Interface
 	}
 	networkingV1ReturnsOnCall map[int]struct {
-		result1 v1f.NetworkingV1Interface
+		result1 networkingv1.NetworkingV1Interface
 	}
-	PolicyStub        func() v1beta1i.PolicyV1beta1Interface
-	policyMutex       sync.RWMutex
-	policyArgsForCall []struct {
+	NetworkingStub        func() networkingv1.NetworkingV1Interface
+	networkingMutex       sync.RWMutex
+	networkingArgsForCall []struct{}
+	networkingReturns     struct {
+		result1 networkingv1.NetworkingV1Interface
 	}
-	policyReturns struct {
-		result1 v1beta1i.PolicyV1beta1Interface
+	networkingReturnsOnCall map[int]struct {
+		result1 networkingv1.NetworkingV1Interface
 	}
-	policyReturnsOnCall map[int]struct {
-		result1 v1beta1i.PolicyV1beta1Interface
-	}
-	PolicyV1beta1Stub        func() v1beta1i.PolicyV1beta1Interface
+	PolicyV1beta1Stub        func() policyv1beta1.PolicyV1beta1Interface
 	policyV1beta1Mutex       sync.RWMutex
-	policyV1beta1ArgsForCall []struct {
-	}
-	policyV1beta1Returns struct {
-		result1 v1beta1i.PolicyV1beta1Interface
+	policyV1beta1ArgsForCall []struct{}
+	policyV1beta1Returns     struct {
+		result1 policyv1beta1.PolicyV1beta1Interface
 	}
 	policyV1beta1ReturnsOnCall map[int]struct {
-		result1 v1beta1i.PolicyV1beta1Interface
+		result1 policyv1beta1.PolicyV1beta1Interface
 	}
-	RbacStub        func() v1g.RbacV1Interface
-	rbacMutex       sync.RWMutex
-	rbacArgsForCall []struct {
+	PolicyStub        func() policyv1beta1.PolicyV1beta1Interface
+	policyMutex       sync.RWMutex
+	policyArgsForCall []struct{}
+	policyReturns     struct {
+		result1 policyv1beta1.PolicyV1beta1Interface
 	}
-	rbacReturns struct {
-		result1 v1g.RbacV1Interface
+	policyReturnsOnCall map[int]struct {
+		result1 policyv1beta1.PolicyV1beta1Interface
 	}
-	rbacReturnsOnCall map[int]struct {
-		result1 v1g.RbacV1Interface
-	}
-	RbacV1Stub        func() v1g.RbacV1Interface
+	RbacV1Stub        func() rbacv1.RbacV1Interface
 	rbacV1Mutex       sync.RWMutex
-	rbacV1ArgsForCall []struct {
-	}
-	rbacV1Returns struct {
-		result1 v1g.RbacV1Interface
+	rbacV1ArgsForCall []struct{}
+	rbacV1Returns     struct {
+		result1 rbacv1.RbacV1Interface
 	}
 	rbacV1ReturnsOnCall map[int]struct {
-		result1 v1g.RbacV1Interface
+		result1 rbacv1.RbacV1Interface
 	}
-	RbacV1alpha1Stub        func() v1alpha1b.RbacV1alpha1Interface
-	rbacV1alpha1Mutex       sync.RWMutex
-	rbacV1alpha1ArgsForCall []struct {
+	RbacStub        func() rbacv1.RbacV1Interface
+	rbacMutex       sync.RWMutex
+	rbacArgsForCall []struct{}
+	rbacReturns     struct {
+		result1 rbacv1.RbacV1Interface
 	}
-	rbacV1alpha1Returns struct {
-		result1 v1alpha1b.RbacV1alpha1Interface
+	rbacReturnsOnCall map[int]struct {
+		result1 rbacv1.RbacV1Interface
 	}
-	rbacV1alpha1ReturnsOnCall map[int]struct {
-		result1 v1alpha1b.RbacV1alpha1Interface
-	}
-	RbacV1beta1Stub        func() v1beta1j.RbacV1beta1Interface
+	RbacV1beta1Stub        func() rbacv1beta1.RbacV1beta1Interface
 	rbacV1beta1Mutex       sync.RWMutex
-	rbacV1beta1ArgsForCall []struct {
-	}
-	rbacV1beta1Returns struct {
-		result1 v1beta1j.RbacV1beta1Interface
+	rbacV1beta1ArgsForCall []struct{}
+	rbacV1beta1Returns     struct {
+		result1 rbacv1beta1.RbacV1beta1Interface
 	}
 	rbacV1beta1ReturnsOnCall map[int]struct {
-		result1 v1beta1j.RbacV1beta1Interface
+		result1 rbacv1beta1.RbacV1beta1Interface
 	}
-	SchedulingStub        func() v1beta1k.SchedulingV1beta1Interface
-	schedulingMutex       sync.RWMutex
-	schedulingArgsForCall []struct {
+	RbacV1alpha1Stub        func() rbacv1alpha1.RbacV1alpha1Interface
+	rbacV1alpha1Mutex       sync.RWMutex
+	rbacV1alpha1ArgsForCall []struct{}
+	rbacV1alpha1Returns     struct {
+		result1 rbacv1alpha1.RbacV1alpha1Interface
 	}
-	schedulingReturns struct {
-		result1 v1beta1k.SchedulingV1beta1Interface
+	rbacV1alpha1ReturnsOnCall map[int]struct {
+		result1 rbacv1alpha1.RbacV1alpha1Interface
 	}
-	schedulingReturnsOnCall map[int]struct {
-		result1 v1beta1k.SchedulingV1beta1Interface
-	}
-	SchedulingV1alpha1Stub        func() v1alpha1c.SchedulingV1alpha1Interface
+	SchedulingV1alpha1Stub        func() schedulingv1alpha1.SchedulingV1alpha1Interface
 	schedulingV1alpha1Mutex       sync.RWMutex
-	schedulingV1alpha1ArgsForCall []struct {
-	}
-	schedulingV1alpha1Returns struct {
-		result1 v1alpha1c.SchedulingV1alpha1Interface
+	schedulingV1alpha1ArgsForCall []struct{}
+	schedulingV1alpha1Returns     struct {
+		result1 schedulingv1alpha1.SchedulingV1alpha1Interface
 	}
 	schedulingV1alpha1ReturnsOnCall map[int]struct {
-		result1 v1alpha1c.SchedulingV1alpha1Interface
+		result1 schedulingv1alpha1.SchedulingV1alpha1Interface
 	}
-	SchedulingV1beta1Stub        func() v1beta1k.SchedulingV1beta1Interface
+	SchedulingV1beta1Stub        func() schedulingv1beta1.SchedulingV1beta1Interface
 	schedulingV1beta1Mutex       sync.RWMutex
-	schedulingV1beta1ArgsForCall []struct {
-	}
-	schedulingV1beta1Returns struct {
-		result1 v1beta1k.SchedulingV1beta1Interface
+	schedulingV1beta1ArgsForCall []struct{}
+	schedulingV1beta1Returns     struct {
+		result1 schedulingv1beta1.SchedulingV1beta1Interface
 	}
 	schedulingV1beta1ReturnsOnCall map[int]struct {
-		result1 v1beta1k.SchedulingV1beta1Interface
+		result1 schedulingv1beta1.SchedulingV1beta1Interface
 	}
-	SettingsStub        func() v1alpha1d.SettingsV1alpha1Interface
-	settingsMutex       sync.RWMutex
-	settingsArgsForCall []struct {
+	SchedulingStub        func() schedulingv1beta1.SchedulingV1beta1Interface
+	schedulingMutex       sync.RWMutex
+	schedulingArgsForCall []struct{}
+	schedulingReturns     struct {
+		result1 schedulingv1beta1.SchedulingV1beta1Interface
 	}
-	settingsReturns struct {
-		result1 v1alpha1d.SettingsV1alpha1Interface
+	schedulingReturnsOnCall map[int]struct {
+		result1 schedulingv1beta1.SchedulingV1beta1Interface
 	}
-	settingsReturnsOnCall map[int]struct {
-		result1 v1alpha1d.SettingsV1alpha1Interface
-	}
-	SettingsV1alpha1Stub        func() v1alpha1d.SettingsV1alpha1Interface
+	SettingsV1alpha1Stub        func() settingsv1alpha1.SettingsV1alpha1Interface
 	settingsV1alpha1Mutex       sync.RWMutex
-	settingsV1alpha1ArgsForCall []struct {
-	}
-	settingsV1alpha1Returns struct {
-		result1 v1alpha1d.SettingsV1alpha1Interface
+	settingsV1alpha1ArgsForCall []struct{}
+	settingsV1alpha1Returns     struct {
+		result1 settingsv1alpha1.SettingsV1alpha1Interface
 	}
 	settingsV1alpha1ReturnsOnCall map[int]struct {
-		result1 v1alpha1d.SettingsV1alpha1Interface
+		result1 settingsv1alpha1.SettingsV1alpha1Interface
 	}
-	StorageStub        func() v1h.StorageV1Interface
-	storageMutex       sync.RWMutex
-	storageArgsForCall []struct {
+	SettingsStub        func() settingsv1alpha1.SettingsV1alpha1Interface
+	settingsMutex       sync.RWMutex
+	settingsArgsForCall []struct{}
+	settingsReturns     struct {
+		result1 settingsv1alpha1.SettingsV1alpha1Interface
 	}
-	storageReturns struct {
-		result1 v1h.StorageV1Interface
+	settingsReturnsOnCall map[int]struct {
+		result1 settingsv1alpha1.SettingsV1alpha1Interface
 	}
-	storageReturnsOnCall map[int]struct {
-		result1 v1h.StorageV1Interface
-	}
-	StorageV1Stub        func() v1h.StorageV1Interface
-	storageV1Mutex       sync.RWMutex
-	storageV1ArgsForCall []struct {
-	}
-	storageV1Returns struct {
-		result1 v1h.StorageV1Interface
-	}
-	storageV1ReturnsOnCall map[int]struct {
-		result1 v1h.StorageV1Interface
-	}
-	StorageV1alpha1Stub        func() v1alpha1e.StorageV1alpha1Interface
-	storageV1alpha1Mutex       sync.RWMutex
-	storageV1alpha1ArgsForCall []struct {
-	}
-	storageV1alpha1Returns struct {
-		result1 v1alpha1e.StorageV1alpha1Interface
-	}
-	storageV1alpha1ReturnsOnCall map[int]struct {
-		result1 v1alpha1e.StorageV1alpha1Interface
-	}
-	StorageV1beta1Stub        func() v1beta1l.StorageV1beta1Interface
+	StorageV1beta1Stub        func() storagev1beta1.StorageV1beta1Interface
 	storageV1beta1Mutex       sync.RWMutex
-	storageV1beta1ArgsForCall []struct {
-	}
-	storageV1beta1Returns struct {
-		result1 v1beta1l.StorageV1beta1Interface
+	storageV1beta1ArgsForCall []struct{}
+	storageV1beta1Returns     struct {
+		result1 storagev1beta1.StorageV1beta1Interface
 	}
 	storageV1beta1ReturnsOnCall map[int]struct {
-		result1 v1beta1l.StorageV1beta1Interface
+		result1 storagev1beta1.StorageV1beta1Interface
+	}
+	StorageV1Stub        func() storagev1.StorageV1Interface
+	storageV1Mutex       sync.RWMutex
+	storageV1ArgsForCall []struct{}
+	storageV1Returns     struct {
+		result1 storagev1.StorageV1Interface
+	}
+	storageV1ReturnsOnCall map[int]struct {
+		result1 storagev1.StorageV1Interface
+	}
+	StorageStub        func() storagev1.StorageV1Interface
+	storageMutex       sync.RWMutex
+	storageArgsForCall []struct{}
+	storageReturns     struct {
+		result1 storagev1.StorageV1Interface
+	}
+	storageReturnsOnCall map[int]struct {
+		result1 storagev1.StorageV1Interface
+	}
+	StorageV1alpha1Stub        func() storagev1alpha1.StorageV1alpha1Interface
+	storageV1alpha1Mutex       sync.RWMutex
+	storageV1alpha1ArgsForCall []struct{}
+	storageV1alpha1Returns     struct {
+		result1 storagev1alpha1.StorageV1alpha1Interface
+	}
+	storageV1alpha1ReturnsOnCall map[int]struct {
+		result1 storagev1alpha1.StorageV1alpha1Interface
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeK8sClient) Admissionregistration() v1beta1.AdmissionregistrationV1beta1Interface {
-	fake.admissionregistrationMutex.Lock()
-	ret, specificReturn := fake.admissionregistrationReturnsOnCall[len(fake.admissionregistrationArgsForCall)]
-	fake.admissionregistrationArgsForCall = append(fake.admissionregistrationArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Admissionregistration", []interface{}{})
-	fake.admissionregistrationMutex.Unlock()
-	if fake.AdmissionregistrationStub != nil {
-		return fake.AdmissionregistrationStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.admissionregistrationReturns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AdmissionregistrationCallCount() int {
-	fake.admissionregistrationMutex.RLock()
-	defer fake.admissionregistrationMutex.RUnlock()
-	return len(fake.admissionregistrationArgsForCall)
-}
-
-func (fake *FakeK8sClient) AdmissionregistrationCalls(stub func() v1beta1.AdmissionregistrationV1beta1Interface) {
-	fake.admissionregistrationMutex.Lock()
-	defer fake.admissionregistrationMutex.Unlock()
-	fake.AdmissionregistrationStub = stub
-}
-
-func (fake *FakeK8sClient) AdmissionregistrationReturns(result1 v1beta1.AdmissionregistrationV1beta1Interface) {
-	fake.admissionregistrationMutex.Lock()
-	defer fake.admissionregistrationMutex.Unlock()
-	fake.AdmissionregistrationStub = nil
-	fake.admissionregistrationReturns = struct {
-		result1 v1beta1.AdmissionregistrationV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AdmissionregistrationReturnsOnCall(i int, result1 v1beta1.AdmissionregistrationV1beta1Interface) {
-	fake.admissionregistrationMutex.Lock()
-	defer fake.admissionregistrationMutex.Unlock()
-	fake.AdmissionregistrationStub = nil
-	if fake.admissionregistrationReturnsOnCall == nil {
-		fake.admissionregistrationReturnsOnCall = make(map[int]struct {
-			result1 v1beta1.AdmissionregistrationV1beta1Interface
-		})
-	}
-	fake.admissionregistrationReturnsOnCall[i] = struct {
-		result1 v1beta1.AdmissionregistrationV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AdmissionregistrationV1alpha1() v1alpha1.AdmissionregistrationV1alpha1Interface {
-	fake.admissionregistrationV1alpha1Mutex.Lock()
-	ret, specificReturn := fake.admissionregistrationV1alpha1ReturnsOnCall[len(fake.admissionregistrationV1alpha1ArgsForCall)]
-	fake.admissionregistrationV1alpha1ArgsForCall = append(fake.admissionregistrationV1alpha1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("AdmissionregistrationV1alpha1", []interface{}{})
-	fake.admissionregistrationV1alpha1Mutex.Unlock()
-	if fake.AdmissionregistrationV1alpha1Stub != nil {
-		return fake.AdmissionregistrationV1alpha1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.admissionregistrationV1alpha1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AdmissionregistrationV1alpha1CallCount() int {
-	fake.admissionregistrationV1alpha1Mutex.RLock()
-	defer fake.admissionregistrationV1alpha1Mutex.RUnlock()
-	return len(fake.admissionregistrationV1alpha1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) AdmissionregistrationV1alpha1Calls(stub func() v1alpha1.AdmissionregistrationV1alpha1Interface) {
-	fake.admissionregistrationV1alpha1Mutex.Lock()
-	defer fake.admissionregistrationV1alpha1Mutex.Unlock()
-	fake.AdmissionregistrationV1alpha1Stub = stub
-}
-
-func (fake *FakeK8sClient) AdmissionregistrationV1alpha1Returns(result1 v1alpha1.AdmissionregistrationV1alpha1Interface) {
-	fake.admissionregistrationV1alpha1Mutex.Lock()
-	defer fake.admissionregistrationV1alpha1Mutex.Unlock()
-	fake.AdmissionregistrationV1alpha1Stub = nil
-	fake.admissionregistrationV1alpha1Returns = struct {
-		result1 v1alpha1.AdmissionregistrationV1alpha1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AdmissionregistrationV1alpha1ReturnsOnCall(i int, result1 v1alpha1.AdmissionregistrationV1alpha1Interface) {
-	fake.admissionregistrationV1alpha1Mutex.Lock()
-	defer fake.admissionregistrationV1alpha1Mutex.Unlock()
-	fake.AdmissionregistrationV1alpha1Stub = nil
-	if fake.admissionregistrationV1alpha1ReturnsOnCall == nil {
-		fake.admissionregistrationV1alpha1ReturnsOnCall = make(map[int]struct {
-			result1 v1alpha1.AdmissionregistrationV1alpha1Interface
-		})
-	}
-	fake.admissionregistrationV1alpha1ReturnsOnCall[i] = struct {
-		result1 v1alpha1.AdmissionregistrationV1alpha1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AdmissionregistrationV1beta1() v1beta1.AdmissionregistrationV1beta1Interface {
-	fake.admissionregistrationV1beta1Mutex.Lock()
-	ret, specificReturn := fake.admissionregistrationV1beta1ReturnsOnCall[len(fake.admissionregistrationV1beta1ArgsForCall)]
-	fake.admissionregistrationV1beta1ArgsForCall = append(fake.admissionregistrationV1beta1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("AdmissionregistrationV1beta1", []interface{}{})
-	fake.admissionregistrationV1beta1Mutex.Unlock()
-	if fake.AdmissionregistrationV1beta1Stub != nil {
-		return fake.AdmissionregistrationV1beta1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.admissionregistrationV1beta1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AdmissionregistrationV1beta1CallCount() int {
-	fake.admissionregistrationV1beta1Mutex.RLock()
-	defer fake.admissionregistrationV1beta1Mutex.RUnlock()
-	return len(fake.admissionregistrationV1beta1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) AdmissionregistrationV1beta1Calls(stub func() v1beta1.AdmissionregistrationV1beta1Interface) {
-	fake.admissionregistrationV1beta1Mutex.Lock()
-	defer fake.admissionregistrationV1beta1Mutex.Unlock()
-	fake.AdmissionregistrationV1beta1Stub = stub
-}
-
-func (fake *FakeK8sClient) AdmissionregistrationV1beta1Returns(result1 v1beta1.AdmissionregistrationV1beta1Interface) {
-	fake.admissionregistrationV1beta1Mutex.Lock()
-	defer fake.admissionregistrationV1beta1Mutex.Unlock()
-	fake.AdmissionregistrationV1beta1Stub = nil
-	fake.admissionregistrationV1beta1Returns = struct {
-		result1 v1beta1.AdmissionregistrationV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AdmissionregistrationV1beta1ReturnsOnCall(i int, result1 v1beta1.AdmissionregistrationV1beta1Interface) {
-	fake.admissionregistrationV1beta1Mutex.Lock()
-	defer fake.admissionregistrationV1beta1Mutex.Unlock()
-	fake.AdmissionregistrationV1beta1Stub = nil
-	if fake.admissionregistrationV1beta1ReturnsOnCall == nil {
-		fake.admissionregistrationV1beta1ReturnsOnCall = make(map[int]struct {
-			result1 v1beta1.AdmissionregistrationV1beta1Interface
-		})
-	}
-	fake.admissionregistrationV1beta1ReturnsOnCall[i] = struct {
-		result1 v1beta1.AdmissionregistrationV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) Apps() v1.AppsV1Interface {
-	fake.appsMutex.Lock()
-	ret, specificReturn := fake.appsReturnsOnCall[len(fake.appsArgsForCall)]
-	fake.appsArgsForCall = append(fake.appsArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Apps", []interface{}{})
-	fake.appsMutex.Unlock()
-	if fake.AppsStub != nil {
-		return fake.AppsStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.appsReturns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AppsCallCount() int {
-	fake.appsMutex.RLock()
-	defer fake.appsMutex.RUnlock()
-	return len(fake.appsArgsForCall)
-}
-
-func (fake *FakeK8sClient) AppsCalls(stub func() v1.AppsV1Interface) {
-	fake.appsMutex.Lock()
-	defer fake.appsMutex.Unlock()
-	fake.AppsStub = stub
-}
-
-func (fake *FakeK8sClient) AppsReturns(result1 v1.AppsV1Interface) {
-	fake.appsMutex.Lock()
-	defer fake.appsMutex.Unlock()
-	fake.AppsStub = nil
-	fake.appsReturns = struct {
-		result1 v1.AppsV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AppsReturnsOnCall(i int, result1 v1.AppsV1Interface) {
-	fake.appsMutex.Lock()
-	defer fake.appsMutex.Unlock()
-	fake.AppsStub = nil
-	if fake.appsReturnsOnCall == nil {
-		fake.appsReturnsOnCall = make(map[int]struct {
-			result1 v1.AppsV1Interface
-		})
-	}
-	fake.appsReturnsOnCall[i] = struct {
-		result1 v1.AppsV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AppsV1() v1.AppsV1Interface {
-	fake.appsV1Mutex.Lock()
-	ret, specificReturn := fake.appsV1ReturnsOnCall[len(fake.appsV1ArgsForCall)]
-	fake.appsV1ArgsForCall = append(fake.appsV1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("AppsV1", []interface{}{})
-	fake.appsV1Mutex.Unlock()
-	if fake.AppsV1Stub != nil {
-		return fake.AppsV1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.appsV1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AppsV1CallCount() int {
-	fake.appsV1Mutex.RLock()
-	defer fake.appsV1Mutex.RUnlock()
-	return len(fake.appsV1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) AppsV1Calls(stub func() v1.AppsV1Interface) {
-	fake.appsV1Mutex.Lock()
-	defer fake.appsV1Mutex.Unlock()
-	fake.AppsV1Stub = stub
-}
-
-func (fake *FakeK8sClient) AppsV1Returns(result1 v1.AppsV1Interface) {
-	fake.appsV1Mutex.Lock()
-	defer fake.appsV1Mutex.Unlock()
-	fake.AppsV1Stub = nil
-	fake.appsV1Returns = struct {
-		result1 v1.AppsV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AppsV1ReturnsOnCall(i int, result1 v1.AppsV1Interface) {
-	fake.appsV1Mutex.Lock()
-	defer fake.appsV1Mutex.Unlock()
-	fake.AppsV1Stub = nil
-	if fake.appsV1ReturnsOnCall == nil {
-		fake.appsV1ReturnsOnCall = make(map[int]struct {
-			result1 v1.AppsV1Interface
-		})
-	}
-	fake.appsV1ReturnsOnCall[i] = struct {
-		result1 v1.AppsV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AppsV1beta1() v1beta1a.AppsV1beta1Interface {
-	fake.appsV1beta1Mutex.Lock()
-	ret, specificReturn := fake.appsV1beta1ReturnsOnCall[len(fake.appsV1beta1ArgsForCall)]
-	fake.appsV1beta1ArgsForCall = append(fake.appsV1beta1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("AppsV1beta1", []interface{}{})
-	fake.appsV1beta1Mutex.Unlock()
-	if fake.AppsV1beta1Stub != nil {
-		return fake.AppsV1beta1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.appsV1beta1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AppsV1beta1CallCount() int {
-	fake.appsV1beta1Mutex.RLock()
-	defer fake.appsV1beta1Mutex.RUnlock()
-	return len(fake.appsV1beta1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) AppsV1beta1Calls(stub func() v1beta1a.AppsV1beta1Interface) {
-	fake.appsV1beta1Mutex.Lock()
-	defer fake.appsV1beta1Mutex.Unlock()
-	fake.AppsV1beta1Stub = stub
-}
-
-func (fake *FakeK8sClient) AppsV1beta1Returns(result1 v1beta1a.AppsV1beta1Interface) {
-	fake.appsV1beta1Mutex.Lock()
-	defer fake.appsV1beta1Mutex.Unlock()
-	fake.AppsV1beta1Stub = nil
-	fake.appsV1beta1Returns = struct {
-		result1 v1beta1a.AppsV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AppsV1beta1ReturnsOnCall(i int, result1 v1beta1a.AppsV1beta1Interface) {
-	fake.appsV1beta1Mutex.Lock()
-	defer fake.appsV1beta1Mutex.Unlock()
-	fake.AppsV1beta1Stub = nil
-	if fake.appsV1beta1ReturnsOnCall == nil {
-		fake.appsV1beta1ReturnsOnCall = make(map[int]struct {
-			result1 v1beta1a.AppsV1beta1Interface
-		})
-	}
-	fake.appsV1beta1ReturnsOnCall[i] = struct {
-		result1 v1beta1a.AppsV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AppsV1beta2() v1beta2.AppsV1beta2Interface {
-	fake.appsV1beta2Mutex.Lock()
-	ret, specificReturn := fake.appsV1beta2ReturnsOnCall[len(fake.appsV1beta2ArgsForCall)]
-	fake.appsV1beta2ArgsForCall = append(fake.appsV1beta2ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("AppsV1beta2", []interface{}{})
-	fake.appsV1beta2Mutex.Unlock()
-	if fake.AppsV1beta2Stub != nil {
-		return fake.AppsV1beta2Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.appsV1beta2Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AppsV1beta2CallCount() int {
-	fake.appsV1beta2Mutex.RLock()
-	defer fake.appsV1beta2Mutex.RUnlock()
-	return len(fake.appsV1beta2ArgsForCall)
-}
-
-func (fake *FakeK8sClient) AppsV1beta2Calls(stub func() v1beta2.AppsV1beta2Interface) {
-	fake.appsV1beta2Mutex.Lock()
-	defer fake.appsV1beta2Mutex.Unlock()
-	fake.AppsV1beta2Stub = stub
-}
-
-func (fake *FakeK8sClient) AppsV1beta2Returns(result1 v1beta2.AppsV1beta2Interface) {
-	fake.appsV1beta2Mutex.Lock()
-	defer fake.appsV1beta2Mutex.Unlock()
-	fake.AppsV1beta2Stub = nil
-	fake.appsV1beta2Returns = struct {
-		result1 v1beta2.AppsV1beta2Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AppsV1beta2ReturnsOnCall(i int, result1 v1beta2.AppsV1beta2Interface) {
-	fake.appsV1beta2Mutex.Lock()
-	defer fake.appsV1beta2Mutex.Unlock()
-	fake.AppsV1beta2Stub = nil
-	if fake.appsV1beta2ReturnsOnCall == nil {
-		fake.appsV1beta2ReturnsOnCall = make(map[int]struct {
-			result1 v1beta2.AppsV1beta2Interface
-		})
-	}
-	fake.appsV1beta2ReturnsOnCall[i] = struct {
-		result1 v1beta2.AppsV1beta2Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) Auditregistration() v1alpha1a.AuditregistrationV1alpha1Interface {
-	fake.auditregistrationMutex.Lock()
-	ret, specificReturn := fake.auditregistrationReturnsOnCall[len(fake.auditregistrationArgsForCall)]
-	fake.auditregistrationArgsForCall = append(fake.auditregistrationArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Auditregistration", []interface{}{})
-	fake.auditregistrationMutex.Unlock()
-	if fake.AuditregistrationStub != nil {
-		return fake.AuditregistrationStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.auditregistrationReturns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AuditregistrationCallCount() int {
-	fake.auditregistrationMutex.RLock()
-	defer fake.auditregistrationMutex.RUnlock()
-	return len(fake.auditregistrationArgsForCall)
-}
-
-func (fake *FakeK8sClient) AuditregistrationCalls(stub func() v1alpha1a.AuditregistrationV1alpha1Interface) {
-	fake.auditregistrationMutex.Lock()
-	defer fake.auditregistrationMutex.Unlock()
-	fake.AuditregistrationStub = stub
-}
-
-func (fake *FakeK8sClient) AuditregistrationReturns(result1 v1alpha1a.AuditregistrationV1alpha1Interface) {
-	fake.auditregistrationMutex.Lock()
-	defer fake.auditregistrationMutex.Unlock()
-	fake.AuditregistrationStub = nil
-	fake.auditregistrationReturns = struct {
-		result1 v1alpha1a.AuditregistrationV1alpha1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AuditregistrationReturnsOnCall(i int, result1 v1alpha1a.AuditregistrationV1alpha1Interface) {
-	fake.auditregistrationMutex.Lock()
-	defer fake.auditregistrationMutex.Unlock()
-	fake.AuditregistrationStub = nil
-	if fake.auditregistrationReturnsOnCall == nil {
-		fake.auditregistrationReturnsOnCall = make(map[int]struct {
-			result1 v1alpha1a.AuditregistrationV1alpha1Interface
-		})
-	}
-	fake.auditregistrationReturnsOnCall[i] = struct {
-		result1 v1alpha1a.AuditregistrationV1alpha1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AuditregistrationV1alpha1() v1alpha1a.AuditregistrationV1alpha1Interface {
-	fake.auditregistrationV1alpha1Mutex.Lock()
-	ret, specificReturn := fake.auditregistrationV1alpha1ReturnsOnCall[len(fake.auditregistrationV1alpha1ArgsForCall)]
-	fake.auditregistrationV1alpha1ArgsForCall = append(fake.auditregistrationV1alpha1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("AuditregistrationV1alpha1", []interface{}{})
-	fake.auditregistrationV1alpha1Mutex.Unlock()
-	if fake.AuditregistrationV1alpha1Stub != nil {
-		return fake.AuditregistrationV1alpha1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.auditregistrationV1alpha1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AuditregistrationV1alpha1CallCount() int {
-	fake.auditregistrationV1alpha1Mutex.RLock()
-	defer fake.auditregistrationV1alpha1Mutex.RUnlock()
-	return len(fake.auditregistrationV1alpha1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) AuditregistrationV1alpha1Calls(stub func() v1alpha1a.AuditregistrationV1alpha1Interface) {
-	fake.auditregistrationV1alpha1Mutex.Lock()
-	defer fake.auditregistrationV1alpha1Mutex.Unlock()
-	fake.AuditregistrationV1alpha1Stub = stub
-}
-
-func (fake *FakeK8sClient) AuditregistrationV1alpha1Returns(result1 v1alpha1a.AuditregistrationV1alpha1Interface) {
-	fake.auditregistrationV1alpha1Mutex.Lock()
-	defer fake.auditregistrationV1alpha1Mutex.Unlock()
-	fake.AuditregistrationV1alpha1Stub = nil
-	fake.auditregistrationV1alpha1Returns = struct {
-		result1 v1alpha1a.AuditregistrationV1alpha1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AuditregistrationV1alpha1ReturnsOnCall(i int, result1 v1alpha1a.AuditregistrationV1alpha1Interface) {
-	fake.auditregistrationV1alpha1Mutex.Lock()
-	defer fake.auditregistrationV1alpha1Mutex.Unlock()
-	fake.AuditregistrationV1alpha1Stub = nil
-	if fake.auditregistrationV1alpha1ReturnsOnCall == nil {
-		fake.auditregistrationV1alpha1ReturnsOnCall = make(map[int]struct {
-			result1 v1alpha1a.AuditregistrationV1alpha1Interface
-		})
-	}
-	fake.auditregistrationV1alpha1ReturnsOnCall[i] = struct {
-		result1 v1alpha1a.AuditregistrationV1alpha1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) Authentication() v1a.AuthenticationV1Interface {
-	fake.authenticationMutex.Lock()
-	ret, specificReturn := fake.authenticationReturnsOnCall[len(fake.authenticationArgsForCall)]
-	fake.authenticationArgsForCall = append(fake.authenticationArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Authentication", []interface{}{})
-	fake.authenticationMutex.Unlock()
-	if fake.AuthenticationStub != nil {
-		return fake.AuthenticationStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.authenticationReturns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AuthenticationCallCount() int {
-	fake.authenticationMutex.RLock()
-	defer fake.authenticationMutex.RUnlock()
-	return len(fake.authenticationArgsForCall)
-}
-
-func (fake *FakeK8sClient) AuthenticationCalls(stub func() v1a.AuthenticationV1Interface) {
-	fake.authenticationMutex.Lock()
-	defer fake.authenticationMutex.Unlock()
-	fake.AuthenticationStub = stub
-}
-
-func (fake *FakeK8sClient) AuthenticationReturns(result1 v1a.AuthenticationV1Interface) {
-	fake.authenticationMutex.Lock()
-	defer fake.authenticationMutex.Unlock()
-	fake.AuthenticationStub = nil
-	fake.authenticationReturns = struct {
-		result1 v1a.AuthenticationV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AuthenticationReturnsOnCall(i int, result1 v1a.AuthenticationV1Interface) {
-	fake.authenticationMutex.Lock()
-	defer fake.authenticationMutex.Unlock()
-	fake.AuthenticationStub = nil
-	if fake.authenticationReturnsOnCall == nil {
-		fake.authenticationReturnsOnCall = make(map[int]struct {
-			result1 v1a.AuthenticationV1Interface
-		})
-	}
-	fake.authenticationReturnsOnCall[i] = struct {
-		result1 v1a.AuthenticationV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AuthenticationV1() v1a.AuthenticationV1Interface {
-	fake.authenticationV1Mutex.Lock()
-	ret, specificReturn := fake.authenticationV1ReturnsOnCall[len(fake.authenticationV1ArgsForCall)]
-	fake.authenticationV1ArgsForCall = append(fake.authenticationV1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("AuthenticationV1", []interface{}{})
-	fake.authenticationV1Mutex.Unlock()
-	if fake.AuthenticationV1Stub != nil {
-		return fake.AuthenticationV1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.authenticationV1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AuthenticationV1CallCount() int {
-	fake.authenticationV1Mutex.RLock()
-	defer fake.authenticationV1Mutex.RUnlock()
-	return len(fake.authenticationV1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) AuthenticationV1Calls(stub func() v1a.AuthenticationV1Interface) {
-	fake.authenticationV1Mutex.Lock()
-	defer fake.authenticationV1Mutex.Unlock()
-	fake.AuthenticationV1Stub = stub
-}
-
-func (fake *FakeK8sClient) AuthenticationV1Returns(result1 v1a.AuthenticationV1Interface) {
-	fake.authenticationV1Mutex.Lock()
-	defer fake.authenticationV1Mutex.Unlock()
-	fake.AuthenticationV1Stub = nil
-	fake.authenticationV1Returns = struct {
-		result1 v1a.AuthenticationV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AuthenticationV1ReturnsOnCall(i int, result1 v1a.AuthenticationV1Interface) {
-	fake.authenticationV1Mutex.Lock()
-	defer fake.authenticationV1Mutex.Unlock()
-	fake.AuthenticationV1Stub = nil
-	if fake.authenticationV1ReturnsOnCall == nil {
-		fake.authenticationV1ReturnsOnCall = make(map[int]struct {
-			result1 v1a.AuthenticationV1Interface
-		})
-	}
-	fake.authenticationV1ReturnsOnCall[i] = struct {
-		result1 v1a.AuthenticationV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AuthenticationV1beta1() v1beta1b.AuthenticationV1beta1Interface {
-	fake.authenticationV1beta1Mutex.Lock()
-	ret, specificReturn := fake.authenticationV1beta1ReturnsOnCall[len(fake.authenticationV1beta1ArgsForCall)]
-	fake.authenticationV1beta1ArgsForCall = append(fake.authenticationV1beta1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("AuthenticationV1beta1", []interface{}{})
-	fake.authenticationV1beta1Mutex.Unlock()
-	if fake.AuthenticationV1beta1Stub != nil {
-		return fake.AuthenticationV1beta1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.authenticationV1beta1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AuthenticationV1beta1CallCount() int {
-	fake.authenticationV1beta1Mutex.RLock()
-	defer fake.authenticationV1beta1Mutex.RUnlock()
-	return len(fake.authenticationV1beta1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) AuthenticationV1beta1Calls(stub func() v1beta1b.AuthenticationV1beta1Interface) {
-	fake.authenticationV1beta1Mutex.Lock()
-	defer fake.authenticationV1beta1Mutex.Unlock()
-	fake.AuthenticationV1beta1Stub = stub
-}
-
-func (fake *FakeK8sClient) AuthenticationV1beta1Returns(result1 v1beta1b.AuthenticationV1beta1Interface) {
-	fake.authenticationV1beta1Mutex.Lock()
-	defer fake.authenticationV1beta1Mutex.Unlock()
-	fake.AuthenticationV1beta1Stub = nil
-	fake.authenticationV1beta1Returns = struct {
-		result1 v1beta1b.AuthenticationV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AuthenticationV1beta1ReturnsOnCall(i int, result1 v1beta1b.AuthenticationV1beta1Interface) {
-	fake.authenticationV1beta1Mutex.Lock()
-	defer fake.authenticationV1beta1Mutex.Unlock()
-	fake.AuthenticationV1beta1Stub = nil
-	if fake.authenticationV1beta1ReturnsOnCall == nil {
-		fake.authenticationV1beta1ReturnsOnCall = make(map[int]struct {
-			result1 v1beta1b.AuthenticationV1beta1Interface
-		})
-	}
-	fake.authenticationV1beta1ReturnsOnCall[i] = struct {
-		result1 v1beta1b.AuthenticationV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) Authorization() v1b.AuthorizationV1Interface {
-	fake.authorizationMutex.Lock()
-	ret, specificReturn := fake.authorizationReturnsOnCall[len(fake.authorizationArgsForCall)]
-	fake.authorizationArgsForCall = append(fake.authorizationArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Authorization", []interface{}{})
-	fake.authorizationMutex.Unlock()
-	if fake.AuthorizationStub != nil {
-		return fake.AuthorizationStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.authorizationReturns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AuthorizationCallCount() int {
-	fake.authorizationMutex.RLock()
-	defer fake.authorizationMutex.RUnlock()
-	return len(fake.authorizationArgsForCall)
-}
-
-func (fake *FakeK8sClient) AuthorizationCalls(stub func() v1b.AuthorizationV1Interface) {
-	fake.authorizationMutex.Lock()
-	defer fake.authorizationMutex.Unlock()
-	fake.AuthorizationStub = stub
-}
-
-func (fake *FakeK8sClient) AuthorizationReturns(result1 v1b.AuthorizationV1Interface) {
-	fake.authorizationMutex.Lock()
-	defer fake.authorizationMutex.Unlock()
-	fake.AuthorizationStub = nil
-	fake.authorizationReturns = struct {
-		result1 v1b.AuthorizationV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AuthorizationReturnsOnCall(i int, result1 v1b.AuthorizationV1Interface) {
-	fake.authorizationMutex.Lock()
-	defer fake.authorizationMutex.Unlock()
-	fake.AuthorizationStub = nil
-	if fake.authorizationReturnsOnCall == nil {
-		fake.authorizationReturnsOnCall = make(map[int]struct {
-			result1 v1b.AuthorizationV1Interface
-		})
-	}
-	fake.authorizationReturnsOnCall[i] = struct {
-		result1 v1b.AuthorizationV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AuthorizationV1() v1b.AuthorizationV1Interface {
-	fake.authorizationV1Mutex.Lock()
-	ret, specificReturn := fake.authorizationV1ReturnsOnCall[len(fake.authorizationV1ArgsForCall)]
-	fake.authorizationV1ArgsForCall = append(fake.authorizationV1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("AuthorizationV1", []interface{}{})
-	fake.authorizationV1Mutex.Unlock()
-	if fake.AuthorizationV1Stub != nil {
-		return fake.AuthorizationV1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.authorizationV1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AuthorizationV1CallCount() int {
-	fake.authorizationV1Mutex.RLock()
-	defer fake.authorizationV1Mutex.RUnlock()
-	return len(fake.authorizationV1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) AuthorizationV1Calls(stub func() v1b.AuthorizationV1Interface) {
-	fake.authorizationV1Mutex.Lock()
-	defer fake.authorizationV1Mutex.Unlock()
-	fake.AuthorizationV1Stub = stub
-}
-
-func (fake *FakeK8sClient) AuthorizationV1Returns(result1 v1b.AuthorizationV1Interface) {
-	fake.authorizationV1Mutex.Lock()
-	defer fake.authorizationV1Mutex.Unlock()
-	fake.AuthorizationV1Stub = nil
-	fake.authorizationV1Returns = struct {
-		result1 v1b.AuthorizationV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AuthorizationV1ReturnsOnCall(i int, result1 v1b.AuthorizationV1Interface) {
-	fake.authorizationV1Mutex.Lock()
-	defer fake.authorizationV1Mutex.Unlock()
-	fake.AuthorizationV1Stub = nil
-	if fake.authorizationV1ReturnsOnCall == nil {
-		fake.authorizationV1ReturnsOnCall = make(map[int]struct {
-			result1 v1b.AuthorizationV1Interface
-		})
-	}
-	fake.authorizationV1ReturnsOnCall[i] = struct {
-		result1 v1b.AuthorizationV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AuthorizationV1beta1() v1beta1c.AuthorizationV1beta1Interface {
-	fake.authorizationV1beta1Mutex.Lock()
-	ret, specificReturn := fake.authorizationV1beta1ReturnsOnCall[len(fake.authorizationV1beta1ArgsForCall)]
-	fake.authorizationV1beta1ArgsForCall = append(fake.authorizationV1beta1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("AuthorizationV1beta1", []interface{}{})
-	fake.authorizationV1beta1Mutex.Unlock()
-	if fake.AuthorizationV1beta1Stub != nil {
-		return fake.AuthorizationV1beta1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.authorizationV1beta1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AuthorizationV1beta1CallCount() int {
-	fake.authorizationV1beta1Mutex.RLock()
-	defer fake.authorizationV1beta1Mutex.RUnlock()
-	return len(fake.authorizationV1beta1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) AuthorizationV1beta1Calls(stub func() v1beta1c.AuthorizationV1beta1Interface) {
-	fake.authorizationV1beta1Mutex.Lock()
-	defer fake.authorizationV1beta1Mutex.Unlock()
-	fake.AuthorizationV1beta1Stub = stub
-}
-
-func (fake *FakeK8sClient) AuthorizationV1beta1Returns(result1 v1beta1c.AuthorizationV1beta1Interface) {
-	fake.authorizationV1beta1Mutex.Lock()
-	defer fake.authorizationV1beta1Mutex.Unlock()
-	fake.AuthorizationV1beta1Stub = nil
-	fake.authorizationV1beta1Returns = struct {
-		result1 v1beta1c.AuthorizationV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AuthorizationV1beta1ReturnsOnCall(i int, result1 v1beta1c.AuthorizationV1beta1Interface) {
-	fake.authorizationV1beta1Mutex.Lock()
-	defer fake.authorizationV1beta1Mutex.Unlock()
-	fake.AuthorizationV1beta1Stub = nil
-	if fake.authorizationV1beta1ReturnsOnCall == nil {
-		fake.authorizationV1beta1ReturnsOnCall = make(map[int]struct {
-			result1 v1beta1c.AuthorizationV1beta1Interface
-		})
-	}
-	fake.authorizationV1beta1ReturnsOnCall[i] = struct {
-		result1 v1beta1c.AuthorizationV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) Autoscaling() v1c.AutoscalingV1Interface {
-	fake.autoscalingMutex.Lock()
-	ret, specificReturn := fake.autoscalingReturnsOnCall[len(fake.autoscalingArgsForCall)]
-	fake.autoscalingArgsForCall = append(fake.autoscalingArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Autoscaling", []interface{}{})
-	fake.autoscalingMutex.Unlock()
-	if fake.AutoscalingStub != nil {
-		return fake.AutoscalingStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.autoscalingReturns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AutoscalingCallCount() int {
-	fake.autoscalingMutex.RLock()
-	defer fake.autoscalingMutex.RUnlock()
-	return len(fake.autoscalingArgsForCall)
-}
-
-func (fake *FakeK8sClient) AutoscalingCalls(stub func() v1c.AutoscalingV1Interface) {
-	fake.autoscalingMutex.Lock()
-	defer fake.autoscalingMutex.Unlock()
-	fake.AutoscalingStub = stub
-}
-
-func (fake *FakeK8sClient) AutoscalingReturns(result1 v1c.AutoscalingV1Interface) {
-	fake.autoscalingMutex.Lock()
-	defer fake.autoscalingMutex.Unlock()
-	fake.AutoscalingStub = nil
-	fake.autoscalingReturns = struct {
-		result1 v1c.AutoscalingV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AutoscalingReturnsOnCall(i int, result1 v1c.AutoscalingV1Interface) {
-	fake.autoscalingMutex.Lock()
-	defer fake.autoscalingMutex.Unlock()
-	fake.AutoscalingStub = nil
-	if fake.autoscalingReturnsOnCall == nil {
-		fake.autoscalingReturnsOnCall = make(map[int]struct {
-			result1 v1c.AutoscalingV1Interface
-		})
-	}
-	fake.autoscalingReturnsOnCall[i] = struct {
-		result1 v1c.AutoscalingV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AutoscalingV1() v1c.AutoscalingV1Interface {
-	fake.autoscalingV1Mutex.Lock()
-	ret, specificReturn := fake.autoscalingV1ReturnsOnCall[len(fake.autoscalingV1ArgsForCall)]
-	fake.autoscalingV1ArgsForCall = append(fake.autoscalingV1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("AutoscalingV1", []interface{}{})
-	fake.autoscalingV1Mutex.Unlock()
-	if fake.AutoscalingV1Stub != nil {
-		return fake.AutoscalingV1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.autoscalingV1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AutoscalingV1CallCount() int {
-	fake.autoscalingV1Mutex.RLock()
-	defer fake.autoscalingV1Mutex.RUnlock()
-	return len(fake.autoscalingV1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) AutoscalingV1Calls(stub func() v1c.AutoscalingV1Interface) {
-	fake.autoscalingV1Mutex.Lock()
-	defer fake.autoscalingV1Mutex.Unlock()
-	fake.AutoscalingV1Stub = stub
-}
-
-func (fake *FakeK8sClient) AutoscalingV1Returns(result1 v1c.AutoscalingV1Interface) {
-	fake.autoscalingV1Mutex.Lock()
-	defer fake.autoscalingV1Mutex.Unlock()
-	fake.AutoscalingV1Stub = nil
-	fake.autoscalingV1Returns = struct {
-		result1 v1c.AutoscalingV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AutoscalingV1ReturnsOnCall(i int, result1 v1c.AutoscalingV1Interface) {
-	fake.autoscalingV1Mutex.Lock()
-	defer fake.autoscalingV1Mutex.Unlock()
-	fake.AutoscalingV1Stub = nil
-	if fake.autoscalingV1ReturnsOnCall == nil {
-		fake.autoscalingV1ReturnsOnCall = make(map[int]struct {
-			result1 v1c.AutoscalingV1Interface
-		})
-	}
-	fake.autoscalingV1ReturnsOnCall[i] = struct {
-		result1 v1c.AutoscalingV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AutoscalingV2beta1() v2beta1.AutoscalingV2beta1Interface {
-	fake.autoscalingV2beta1Mutex.Lock()
-	ret, specificReturn := fake.autoscalingV2beta1ReturnsOnCall[len(fake.autoscalingV2beta1ArgsForCall)]
-	fake.autoscalingV2beta1ArgsForCall = append(fake.autoscalingV2beta1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("AutoscalingV2beta1", []interface{}{})
-	fake.autoscalingV2beta1Mutex.Unlock()
-	if fake.AutoscalingV2beta1Stub != nil {
-		return fake.AutoscalingV2beta1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.autoscalingV2beta1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AutoscalingV2beta1CallCount() int {
-	fake.autoscalingV2beta1Mutex.RLock()
-	defer fake.autoscalingV2beta1Mutex.RUnlock()
-	return len(fake.autoscalingV2beta1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) AutoscalingV2beta1Calls(stub func() v2beta1.AutoscalingV2beta1Interface) {
-	fake.autoscalingV2beta1Mutex.Lock()
-	defer fake.autoscalingV2beta1Mutex.Unlock()
-	fake.AutoscalingV2beta1Stub = stub
-}
-
-func (fake *FakeK8sClient) AutoscalingV2beta1Returns(result1 v2beta1.AutoscalingV2beta1Interface) {
-	fake.autoscalingV2beta1Mutex.Lock()
-	defer fake.autoscalingV2beta1Mutex.Unlock()
-	fake.AutoscalingV2beta1Stub = nil
-	fake.autoscalingV2beta1Returns = struct {
-		result1 v2beta1.AutoscalingV2beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AutoscalingV2beta1ReturnsOnCall(i int, result1 v2beta1.AutoscalingV2beta1Interface) {
-	fake.autoscalingV2beta1Mutex.Lock()
-	defer fake.autoscalingV2beta1Mutex.Unlock()
-	fake.AutoscalingV2beta1Stub = nil
-	if fake.autoscalingV2beta1ReturnsOnCall == nil {
-		fake.autoscalingV2beta1ReturnsOnCall = make(map[int]struct {
-			result1 v2beta1.AutoscalingV2beta1Interface
-		})
-	}
-	fake.autoscalingV2beta1ReturnsOnCall[i] = struct {
-		result1 v2beta1.AutoscalingV2beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AutoscalingV2beta2() v2beta2.AutoscalingV2beta2Interface {
-	fake.autoscalingV2beta2Mutex.Lock()
-	ret, specificReturn := fake.autoscalingV2beta2ReturnsOnCall[len(fake.autoscalingV2beta2ArgsForCall)]
-	fake.autoscalingV2beta2ArgsForCall = append(fake.autoscalingV2beta2ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("AutoscalingV2beta2", []interface{}{})
-	fake.autoscalingV2beta2Mutex.Unlock()
-	if fake.AutoscalingV2beta2Stub != nil {
-		return fake.AutoscalingV2beta2Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.autoscalingV2beta2Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) AutoscalingV2beta2CallCount() int {
-	fake.autoscalingV2beta2Mutex.RLock()
-	defer fake.autoscalingV2beta2Mutex.RUnlock()
-	return len(fake.autoscalingV2beta2ArgsForCall)
-}
-
-func (fake *FakeK8sClient) AutoscalingV2beta2Calls(stub func() v2beta2.AutoscalingV2beta2Interface) {
-	fake.autoscalingV2beta2Mutex.Lock()
-	defer fake.autoscalingV2beta2Mutex.Unlock()
-	fake.AutoscalingV2beta2Stub = stub
-}
-
-func (fake *FakeK8sClient) AutoscalingV2beta2Returns(result1 v2beta2.AutoscalingV2beta2Interface) {
-	fake.autoscalingV2beta2Mutex.Lock()
-	defer fake.autoscalingV2beta2Mutex.Unlock()
-	fake.AutoscalingV2beta2Stub = nil
-	fake.autoscalingV2beta2Returns = struct {
-		result1 v2beta2.AutoscalingV2beta2Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) AutoscalingV2beta2ReturnsOnCall(i int, result1 v2beta2.AutoscalingV2beta2Interface) {
-	fake.autoscalingV2beta2Mutex.Lock()
-	defer fake.autoscalingV2beta2Mutex.Unlock()
-	fake.AutoscalingV2beta2Stub = nil
-	if fake.autoscalingV2beta2ReturnsOnCall == nil {
-		fake.autoscalingV2beta2ReturnsOnCall = make(map[int]struct {
-			result1 v2beta2.AutoscalingV2beta2Interface
-		})
-	}
-	fake.autoscalingV2beta2ReturnsOnCall[i] = struct {
-		result1 v2beta2.AutoscalingV2beta2Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) Batch() v1d.BatchV1Interface {
-	fake.batchMutex.Lock()
-	ret, specificReturn := fake.batchReturnsOnCall[len(fake.batchArgsForCall)]
-	fake.batchArgsForCall = append(fake.batchArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Batch", []interface{}{})
-	fake.batchMutex.Unlock()
-	if fake.BatchStub != nil {
-		return fake.BatchStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.batchReturns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) BatchCallCount() int {
-	fake.batchMutex.RLock()
-	defer fake.batchMutex.RUnlock()
-	return len(fake.batchArgsForCall)
-}
-
-func (fake *FakeK8sClient) BatchCalls(stub func() v1d.BatchV1Interface) {
-	fake.batchMutex.Lock()
-	defer fake.batchMutex.Unlock()
-	fake.BatchStub = stub
-}
-
-func (fake *FakeK8sClient) BatchReturns(result1 v1d.BatchV1Interface) {
-	fake.batchMutex.Lock()
-	defer fake.batchMutex.Unlock()
-	fake.BatchStub = nil
-	fake.batchReturns = struct {
-		result1 v1d.BatchV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) BatchReturnsOnCall(i int, result1 v1d.BatchV1Interface) {
-	fake.batchMutex.Lock()
-	defer fake.batchMutex.Unlock()
-	fake.BatchStub = nil
-	if fake.batchReturnsOnCall == nil {
-		fake.batchReturnsOnCall = make(map[int]struct {
-			result1 v1d.BatchV1Interface
-		})
-	}
-	fake.batchReturnsOnCall[i] = struct {
-		result1 v1d.BatchV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) BatchV1() v1d.BatchV1Interface {
-	fake.batchV1Mutex.Lock()
-	ret, specificReturn := fake.batchV1ReturnsOnCall[len(fake.batchV1ArgsForCall)]
-	fake.batchV1ArgsForCall = append(fake.batchV1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("BatchV1", []interface{}{})
-	fake.batchV1Mutex.Unlock()
-	if fake.BatchV1Stub != nil {
-		return fake.BatchV1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.batchV1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) BatchV1CallCount() int {
-	fake.batchV1Mutex.RLock()
-	defer fake.batchV1Mutex.RUnlock()
-	return len(fake.batchV1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) BatchV1Calls(stub func() v1d.BatchV1Interface) {
-	fake.batchV1Mutex.Lock()
-	defer fake.batchV1Mutex.Unlock()
-	fake.BatchV1Stub = stub
-}
-
-func (fake *FakeK8sClient) BatchV1Returns(result1 v1d.BatchV1Interface) {
-	fake.batchV1Mutex.Lock()
-	defer fake.batchV1Mutex.Unlock()
-	fake.BatchV1Stub = nil
-	fake.batchV1Returns = struct {
-		result1 v1d.BatchV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) BatchV1ReturnsOnCall(i int, result1 v1d.BatchV1Interface) {
-	fake.batchV1Mutex.Lock()
-	defer fake.batchV1Mutex.Unlock()
-	fake.BatchV1Stub = nil
-	if fake.batchV1ReturnsOnCall == nil {
-		fake.batchV1ReturnsOnCall = make(map[int]struct {
-			result1 v1d.BatchV1Interface
-		})
-	}
-	fake.batchV1ReturnsOnCall[i] = struct {
-		result1 v1d.BatchV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) BatchV1beta1() v1beta1d.BatchV1beta1Interface {
-	fake.batchV1beta1Mutex.Lock()
-	ret, specificReturn := fake.batchV1beta1ReturnsOnCall[len(fake.batchV1beta1ArgsForCall)]
-	fake.batchV1beta1ArgsForCall = append(fake.batchV1beta1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("BatchV1beta1", []interface{}{})
-	fake.batchV1beta1Mutex.Unlock()
-	if fake.BatchV1beta1Stub != nil {
-		return fake.BatchV1beta1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.batchV1beta1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) BatchV1beta1CallCount() int {
-	fake.batchV1beta1Mutex.RLock()
-	defer fake.batchV1beta1Mutex.RUnlock()
-	return len(fake.batchV1beta1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) BatchV1beta1Calls(stub func() v1beta1d.BatchV1beta1Interface) {
-	fake.batchV1beta1Mutex.Lock()
-	defer fake.batchV1beta1Mutex.Unlock()
-	fake.BatchV1beta1Stub = stub
-}
-
-func (fake *FakeK8sClient) BatchV1beta1Returns(result1 v1beta1d.BatchV1beta1Interface) {
-	fake.batchV1beta1Mutex.Lock()
-	defer fake.batchV1beta1Mutex.Unlock()
-	fake.BatchV1beta1Stub = nil
-	fake.batchV1beta1Returns = struct {
-		result1 v1beta1d.BatchV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) BatchV1beta1ReturnsOnCall(i int, result1 v1beta1d.BatchV1beta1Interface) {
-	fake.batchV1beta1Mutex.Lock()
-	defer fake.batchV1beta1Mutex.Unlock()
-	fake.BatchV1beta1Stub = nil
-	if fake.batchV1beta1ReturnsOnCall == nil {
-		fake.batchV1beta1ReturnsOnCall = make(map[int]struct {
-			result1 v1beta1d.BatchV1beta1Interface
-		})
-	}
-	fake.batchV1beta1ReturnsOnCall[i] = struct {
-		result1 v1beta1d.BatchV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) BatchV2alpha1() v2alpha1.BatchV2alpha1Interface {
-	fake.batchV2alpha1Mutex.Lock()
-	ret, specificReturn := fake.batchV2alpha1ReturnsOnCall[len(fake.batchV2alpha1ArgsForCall)]
-	fake.batchV2alpha1ArgsForCall = append(fake.batchV2alpha1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("BatchV2alpha1", []interface{}{})
-	fake.batchV2alpha1Mutex.Unlock()
-	if fake.BatchV2alpha1Stub != nil {
-		return fake.BatchV2alpha1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.batchV2alpha1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) BatchV2alpha1CallCount() int {
-	fake.batchV2alpha1Mutex.RLock()
-	defer fake.batchV2alpha1Mutex.RUnlock()
-	return len(fake.batchV2alpha1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) BatchV2alpha1Calls(stub func() v2alpha1.BatchV2alpha1Interface) {
-	fake.batchV2alpha1Mutex.Lock()
-	defer fake.batchV2alpha1Mutex.Unlock()
-	fake.BatchV2alpha1Stub = stub
-}
-
-func (fake *FakeK8sClient) BatchV2alpha1Returns(result1 v2alpha1.BatchV2alpha1Interface) {
-	fake.batchV2alpha1Mutex.Lock()
-	defer fake.batchV2alpha1Mutex.Unlock()
-	fake.BatchV2alpha1Stub = nil
-	fake.batchV2alpha1Returns = struct {
-		result1 v2alpha1.BatchV2alpha1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) BatchV2alpha1ReturnsOnCall(i int, result1 v2alpha1.BatchV2alpha1Interface) {
-	fake.batchV2alpha1Mutex.Lock()
-	defer fake.batchV2alpha1Mutex.Unlock()
-	fake.BatchV2alpha1Stub = nil
-	if fake.batchV2alpha1ReturnsOnCall == nil {
-		fake.batchV2alpha1ReturnsOnCall = make(map[int]struct {
-			result1 v2alpha1.BatchV2alpha1Interface
-		})
-	}
-	fake.batchV2alpha1ReturnsOnCall[i] = struct {
-		result1 v2alpha1.BatchV2alpha1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) Certificates() v1beta1e.CertificatesV1beta1Interface {
-	fake.certificatesMutex.Lock()
-	ret, specificReturn := fake.certificatesReturnsOnCall[len(fake.certificatesArgsForCall)]
-	fake.certificatesArgsForCall = append(fake.certificatesArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Certificates", []interface{}{})
-	fake.certificatesMutex.Unlock()
-	if fake.CertificatesStub != nil {
-		return fake.CertificatesStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.certificatesReturns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) CertificatesCallCount() int {
-	fake.certificatesMutex.RLock()
-	defer fake.certificatesMutex.RUnlock()
-	return len(fake.certificatesArgsForCall)
-}
-
-func (fake *FakeK8sClient) CertificatesCalls(stub func() v1beta1e.CertificatesV1beta1Interface) {
-	fake.certificatesMutex.Lock()
-	defer fake.certificatesMutex.Unlock()
-	fake.CertificatesStub = stub
-}
-
-func (fake *FakeK8sClient) CertificatesReturns(result1 v1beta1e.CertificatesV1beta1Interface) {
-	fake.certificatesMutex.Lock()
-	defer fake.certificatesMutex.Unlock()
-	fake.CertificatesStub = nil
-	fake.certificatesReturns = struct {
-		result1 v1beta1e.CertificatesV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) CertificatesReturnsOnCall(i int, result1 v1beta1e.CertificatesV1beta1Interface) {
-	fake.certificatesMutex.Lock()
-	defer fake.certificatesMutex.Unlock()
-	fake.CertificatesStub = nil
-	if fake.certificatesReturnsOnCall == nil {
-		fake.certificatesReturnsOnCall = make(map[int]struct {
-			result1 v1beta1e.CertificatesV1beta1Interface
-		})
-	}
-	fake.certificatesReturnsOnCall[i] = struct {
-		result1 v1beta1e.CertificatesV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) CertificatesV1beta1() v1beta1e.CertificatesV1beta1Interface {
-	fake.certificatesV1beta1Mutex.Lock()
-	ret, specificReturn := fake.certificatesV1beta1ReturnsOnCall[len(fake.certificatesV1beta1ArgsForCall)]
-	fake.certificatesV1beta1ArgsForCall = append(fake.certificatesV1beta1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("CertificatesV1beta1", []interface{}{})
-	fake.certificatesV1beta1Mutex.Unlock()
-	if fake.CertificatesV1beta1Stub != nil {
-		return fake.CertificatesV1beta1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.certificatesV1beta1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) CertificatesV1beta1CallCount() int {
-	fake.certificatesV1beta1Mutex.RLock()
-	defer fake.certificatesV1beta1Mutex.RUnlock()
-	return len(fake.certificatesV1beta1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) CertificatesV1beta1Calls(stub func() v1beta1e.CertificatesV1beta1Interface) {
-	fake.certificatesV1beta1Mutex.Lock()
-	defer fake.certificatesV1beta1Mutex.Unlock()
-	fake.CertificatesV1beta1Stub = stub
-}
-
-func (fake *FakeK8sClient) CertificatesV1beta1Returns(result1 v1beta1e.CertificatesV1beta1Interface) {
-	fake.certificatesV1beta1Mutex.Lock()
-	defer fake.certificatesV1beta1Mutex.Unlock()
-	fake.CertificatesV1beta1Stub = nil
-	fake.certificatesV1beta1Returns = struct {
-		result1 v1beta1e.CertificatesV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) CertificatesV1beta1ReturnsOnCall(i int, result1 v1beta1e.CertificatesV1beta1Interface) {
-	fake.certificatesV1beta1Mutex.Lock()
-	defer fake.certificatesV1beta1Mutex.Unlock()
-	fake.CertificatesV1beta1Stub = nil
-	if fake.certificatesV1beta1ReturnsOnCall == nil {
-		fake.certificatesV1beta1ReturnsOnCall = make(map[int]struct {
-			result1 v1beta1e.CertificatesV1beta1Interface
-		})
-	}
-	fake.certificatesV1beta1ReturnsOnCall[i] = struct {
-		result1 v1beta1e.CertificatesV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) Coordination() v1beta1f.CoordinationV1beta1Interface {
-	fake.coordinationMutex.Lock()
-	ret, specificReturn := fake.coordinationReturnsOnCall[len(fake.coordinationArgsForCall)]
-	fake.coordinationArgsForCall = append(fake.coordinationArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Coordination", []interface{}{})
-	fake.coordinationMutex.Unlock()
-	if fake.CoordinationStub != nil {
-		return fake.CoordinationStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.coordinationReturns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) CoordinationCallCount() int {
-	fake.coordinationMutex.RLock()
-	defer fake.coordinationMutex.RUnlock()
-	return len(fake.coordinationArgsForCall)
-}
-
-func (fake *FakeK8sClient) CoordinationCalls(stub func() v1beta1f.CoordinationV1beta1Interface) {
-	fake.coordinationMutex.Lock()
-	defer fake.coordinationMutex.Unlock()
-	fake.CoordinationStub = stub
-}
-
-func (fake *FakeK8sClient) CoordinationReturns(result1 v1beta1f.CoordinationV1beta1Interface) {
-	fake.coordinationMutex.Lock()
-	defer fake.coordinationMutex.Unlock()
-	fake.CoordinationStub = nil
-	fake.coordinationReturns = struct {
-		result1 v1beta1f.CoordinationV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) CoordinationReturnsOnCall(i int, result1 v1beta1f.CoordinationV1beta1Interface) {
-	fake.coordinationMutex.Lock()
-	defer fake.coordinationMutex.Unlock()
-	fake.CoordinationStub = nil
-	if fake.coordinationReturnsOnCall == nil {
-		fake.coordinationReturnsOnCall = make(map[int]struct {
-			result1 v1beta1f.CoordinationV1beta1Interface
-		})
-	}
-	fake.coordinationReturnsOnCall[i] = struct {
-		result1 v1beta1f.CoordinationV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) CoordinationV1beta1() v1beta1f.CoordinationV1beta1Interface {
-	fake.coordinationV1beta1Mutex.Lock()
-	ret, specificReturn := fake.coordinationV1beta1ReturnsOnCall[len(fake.coordinationV1beta1ArgsForCall)]
-	fake.coordinationV1beta1ArgsForCall = append(fake.coordinationV1beta1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("CoordinationV1beta1", []interface{}{})
-	fake.coordinationV1beta1Mutex.Unlock()
-	if fake.CoordinationV1beta1Stub != nil {
-		return fake.CoordinationV1beta1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.coordinationV1beta1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) CoordinationV1beta1CallCount() int {
-	fake.coordinationV1beta1Mutex.RLock()
-	defer fake.coordinationV1beta1Mutex.RUnlock()
-	return len(fake.coordinationV1beta1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) CoordinationV1beta1Calls(stub func() v1beta1f.CoordinationV1beta1Interface) {
-	fake.coordinationV1beta1Mutex.Lock()
-	defer fake.coordinationV1beta1Mutex.Unlock()
-	fake.CoordinationV1beta1Stub = stub
-}
-
-func (fake *FakeK8sClient) CoordinationV1beta1Returns(result1 v1beta1f.CoordinationV1beta1Interface) {
-	fake.coordinationV1beta1Mutex.Lock()
-	defer fake.coordinationV1beta1Mutex.Unlock()
-	fake.CoordinationV1beta1Stub = nil
-	fake.coordinationV1beta1Returns = struct {
-		result1 v1beta1f.CoordinationV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) CoordinationV1beta1ReturnsOnCall(i int, result1 v1beta1f.CoordinationV1beta1Interface) {
-	fake.coordinationV1beta1Mutex.Lock()
-	defer fake.coordinationV1beta1Mutex.Unlock()
-	fake.CoordinationV1beta1Stub = nil
-	if fake.coordinationV1beta1ReturnsOnCall == nil {
-		fake.coordinationV1beta1ReturnsOnCall = make(map[int]struct {
-			result1 v1beta1f.CoordinationV1beta1Interface
-		})
-	}
-	fake.coordinationV1beta1ReturnsOnCall[i] = struct {
-		result1 v1beta1f.CoordinationV1beta1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) Core() v1e.CoreV1Interface {
-	fake.coreMutex.Lock()
-	ret, specificReturn := fake.coreReturnsOnCall[len(fake.coreArgsForCall)]
-	fake.coreArgsForCall = append(fake.coreArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Core", []interface{}{})
-	fake.coreMutex.Unlock()
-	if fake.CoreStub != nil {
-		return fake.CoreStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.coreReturns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) CoreCallCount() int {
-	fake.coreMutex.RLock()
-	defer fake.coreMutex.RUnlock()
-	return len(fake.coreArgsForCall)
-}
-
-func (fake *FakeK8sClient) CoreCalls(stub func() v1e.CoreV1Interface) {
-	fake.coreMutex.Lock()
-	defer fake.coreMutex.Unlock()
-	fake.CoreStub = stub
-}
-
-func (fake *FakeK8sClient) CoreReturns(result1 v1e.CoreV1Interface) {
-	fake.coreMutex.Lock()
-	defer fake.coreMutex.Unlock()
-	fake.CoreStub = nil
-	fake.coreReturns = struct {
-		result1 v1e.CoreV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) CoreReturnsOnCall(i int, result1 v1e.CoreV1Interface) {
-	fake.coreMutex.Lock()
-	defer fake.coreMutex.Unlock()
-	fake.CoreStub = nil
-	if fake.coreReturnsOnCall == nil {
-		fake.coreReturnsOnCall = make(map[int]struct {
-			result1 v1e.CoreV1Interface
-		})
-	}
-	fake.coreReturnsOnCall[i] = struct {
-		result1 v1e.CoreV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) CoreV1() v1e.CoreV1Interface {
-	fake.coreV1Mutex.Lock()
-	ret, specificReturn := fake.coreV1ReturnsOnCall[len(fake.coreV1ArgsForCall)]
-	fake.coreV1ArgsForCall = append(fake.coreV1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("CoreV1", []interface{}{})
-	fake.coreV1Mutex.Unlock()
-	if fake.CoreV1Stub != nil {
-		return fake.CoreV1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.coreV1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) CoreV1CallCount() int {
-	fake.coreV1Mutex.RLock()
-	defer fake.coreV1Mutex.RUnlock()
-	return len(fake.coreV1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) CoreV1Calls(stub func() v1e.CoreV1Interface) {
-	fake.coreV1Mutex.Lock()
-	defer fake.coreV1Mutex.Unlock()
-	fake.CoreV1Stub = stub
-}
-
-func (fake *FakeK8sClient) CoreV1Returns(result1 v1e.CoreV1Interface) {
-	fake.coreV1Mutex.Lock()
-	defer fake.coreV1Mutex.Unlock()
-	fake.CoreV1Stub = nil
-	fake.coreV1Returns = struct {
-		result1 v1e.CoreV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) CoreV1ReturnsOnCall(i int, result1 v1e.CoreV1Interface) {
-	fake.coreV1Mutex.Lock()
-	defer fake.coreV1Mutex.Unlock()
-	fake.CoreV1Stub = nil
-	if fake.coreV1ReturnsOnCall == nil {
-		fake.coreV1ReturnsOnCall = make(map[int]struct {
-			result1 v1e.CoreV1Interface
-		})
-	}
-	fake.coreV1ReturnsOnCall[i] = struct {
-		result1 v1e.CoreV1Interface
-	}{result1}
-}
-
 func (fake *FakeK8sClient) Discovery() discovery.DiscoveryInterface {
 	fake.discoveryMutex.Lock()
 	ret, specificReturn := fake.discoveryReturnsOnCall[len(fake.discoveryArgsForCall)]
-	fake.discoveryArgsForCall = append(fake.discoveryArgsForCall, struct {
-	}{})
+	fake.discoveryArgsForCall = append(fake.discoveryArgsForCall, struct{}{})
 	fake.recordInvocation("Discovery", []interface{}{})
 	fake.discoveryMutex.Unlock()
 	if fake.DiscoveryStub != nil {
@@ -2076,8 +516,7 @@ func (fake *FakeK8sClient) Discovery() discovery.DiscoveryInterface {
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.discoveryReturns
-	return fakeReturns.result1
+	return fake.discoveryReturns.result1
 }
 
 func (fake *FakeK8sClient) DiscoveryCallCount() int {
@@ -2086,15 +525,7 @@ func (fake *FakeK8sClient) DiscoveryCallCount() int {
 	return len(fake.discoveryArgsForCall)
 }
 
-func (fake *FakeK8sClient) DiscoveryCalls(stub func() discovery.DiscoveryInterface) {
-	fake.discoveryMutex.Lock()
-	defer fake.discoveryMutex.Unlock()
-	fake.DiscoveryStub = stub
-}
-
 func (fake *FakeK8sClient) DiscoveryReturns(result1 discovery.DiscoveryInterface) {
-	fake.discoveryMutex.Lock()
-	defer fake.discoveryMutex.Unlock()
 	fake.DiscoveryStub = nil
 	fake.discoveryReturns = struct {
 		result1 discovery.DiscoveryInterface
@@ -2102,8 +533,6 @@ func (fake *FakeK8sClient) DiscoveryReturns(result1 discovery.DiscoveryInterface
 }
 
 func (fake *FakeK8sClient) DiscoveryReturnsOnCall(i int, result1 discovery.DiscoveryInterface) {
-	fake.discoveryMutex.Lock()
-	defer fake.discoveryMutex.Unlock()
 	fake.DiscoveryStub = nil
 	if fake.discoveryReturnsOnCall == nil {
 		fake.discoveryReturnsOnCall = make(map[int]struct {
@@ -2115,63 +544,1170 @@ func (fake *FakeK8sClient) DiscoveryReturnsOnCall(i int, result1 discovery.Disco
 	}{result1}
 }
 
-func (fake *FakeK8sClient) Events() v1beta1g.EventsV1beta1Interface {
-	fake.eventsMutex.Lock()
-	ret, specificReturn := fake.eventsReturnsOnCall[len(fake.eventsArgsForCall)]
-	fake.eventsArgsForCall = append(fake.eventsArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Events", []interface{}{})
-	fake.eventsMutex.Unlock()
-	if fake.EventsStub != nil {
-		return fake.EventsStub()
+func (fake *FakeK8sClient) AdmissionregistrationV1alpha1() admissionregistrationv1alpha1.AdmissionregistrationV1alpha1Interface {
+	fake.admissionregistrationV1alpha1Mutex.Lock()
+	ret, specificReturn := fake.admissionregistrationV1alpha1ReturnsOnCall[len(fake.admissionregistrationV1alpha1ArgsForCall)]
+	fake.admissionregistrationV1alpha1ArgsForCall = append(fake.admissionregistrationV1alpha1ArgsForCall, struct{}{})
+	fake.recordInvocation("AdmissionregistrationV1alpha1", []interface{}{})
+	fake.admissionregistrationV1alpha1Mutex.Unlock()
+	if fake.AdmissionregistrationV1alpha1Stub != nil {
+		return fake.AdmissionregistrationV1alpha1Stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.eventsReturns
-	return fakeReturns.result1
+	return fake.admissionregistrationV1alpha1Returns.result1
 }
 
-func (fake *FakeK8sClient) EventsCallCount() int {
-	fake.eventsMutex.RLock()
-	defer fake.eventsMutex.RUnlock()
-	return len(fake.eventsArgsForCall)
+func (fake *FakeK8sClient) AdmissionregistrationV1alpha1CallCount() int {
+	fake.admissionregistrationV1alpha1Mutex.RLock()
+	defer fake.admissionregistrationV1alpha1Mutex.RUnlock()
+	return len(fake.admissionregistrationV1alpha1ArgsForCall)
 }
 
-func (fake *FakeK8sClient) EventsCalls(stub func() v1beta1g.EventsV1beta1Interface) {
-	fake.eventsMutex.Lock()
-	defer fake.eventsMutex.Unlock()
-	fake.EventsStub = stub
-}
-
-func (fake *FakeK8sClient) EventsReturns(result1 v1beta1g.EventsV1beta1Interface) {
-	fake.eventsMutex.Lock()
-	defer fake.eventsMutex.Unlock()
-	fake.EventsStub = nil
-	fake.eventsReturns = struct {
-		result1 v1beta1g.EventsV1beta1Interface
+func (fake *FakeK8sClient) AdmissionregistrationV1alpha1Returns(result1 admissionregistrationv1alpha1.AdmissionregistrationV1alpha1Interface) {
+	fake.AdmissionregistrationV1alpha1Stub = nil
+	fake.admissionregistrationV1alpha1Returns = struct {
+		result1 admissionregistrationv1alpha1.AdmissionregistrationV1alpha1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) EventsReturnsOnCall(i int, result1 v1beta1g.EventsV1beta1Interface) {
-	fake.eventsMutex.Lock()
-	defer fake.eventsMutex.Unlock()
-	fake.EventsStub = nil
-	if fake.eventsReturnsOnCall == nil {
-		fake.eventsReturnsOnCall = make(map[int]struct {
-			result1 v1beta1g.EventsV1beta1Interface
+func (fake *FakeK8sClient) AdmissionregistrationV1alpha1ReturnsOnCall(i int, result1 admissionregistrationv1alpha1.AdmissionregistrationV1alpha1Interface) {
+	fake.AdmissionregistrationV1alpha1Stub = nil
+	if fake.admissionregistrationV1alpha1ReturnsOnCall == nil {
+		fake.admissionregistrationV1alpha1ReturnsOnCall = make(map[int]struct {
+			result1 admissionregistrationv1alpha1.AdmissionregistrationV1alpha1Interface
 		})
 	}
-	fake.eventsReturnsOnCall[i] = struct {
-		result1 v1beta1g.EventsV1beta1Interface
+	fake.admissionregistrationV1alpha1ReturnsOnCall[i] = struct {
+		result1 admissionregistrationv1alpha1.AdmissionregistrationV1alpha1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) EventsV1beta1() v1beta1g.EventsV1beta1Interface {
+func (fake *FakeK8sClient) AdmissionregistrationV1beta1() admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface {
+	fake.admissionregistrationV1beta1Mutex.Lock()
+	ret, specificReturn := fake.admissionregistrationV1beta1ReturnsOnCall[len(fake.admissionregistrationV1beta1ArgsForCall)]
+	fake.admissionregistrationV1beta1ArgsForCall = append(fake.admissionregistrationV1beta1ArgsForCall, struct{}{})
+	fake.recordInvocation("AdmissionregistrationV1beta1", []interface{}{})
+	fake.admissionregistrationV1beta1Mutex.Unlock()
+	if fake.AdmissionregistrationV1beta1Stub != nil {
+		return fake.AdmissionregistrationV1beta1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.admissionregistrationV1beta1Returns.result1
+}
+
+func (fake *FakeK8sClient) AdmissionregistrationV1beta1CallCount() int {
+	fake.admissionregistrationV1beta1Mutex.RLock()
+	defer fake.admissionregistrationV1beta1Mutex.RUnlock()
+	return len(fake.admissionregistrationV1beta1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) AdmissionregistrationV1beta1Returns(result1 admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface) {
+	fake.AdmissionregistrationV1beta1Stub = nil
+	fake.admissionregistrationV1beta1Returns = struct {
+		result1 admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AdmissionregistrationV1beta1ReturnsOnCall(i int, result1 admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface) {
+	fake.AdmissionregistrationV1beta1Stub = nil
+	if fake.admissionregistrationV1beta1ReturnsOnCall == nil {
+		fake.admissionregistrationV1beta1ReturnsOnCall = make(map[int]struct {
+			result1 admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface
+		})
+	}
+	fake.admissionregistrationV1beta1ReturnsOnCall[i] = struct {
+		result1 admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) Admissionregistration() admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface {
+	fake.admissionregistrationMutex.Lock()
+	ret, specificReturn := fake.admissionregistrationReturnsOnCall[len(fake.admissionregistrationArgsForCall)]
+	fake.admissionregistrationArgsForCall = append(fake.admissionregistrationArgsForCall, struct{}{})
+	fake.recordInvocation("Admissionregistration", []interface{}{})
+	fake.admissionregistrationMutex.Unlock()
+	if fake.AdmissionregistrationStub != nil {
+		return fake.AdmissionregistrationStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.admissionregistrationReturns.result1
+}
+
+func (fake *FakeK8sClient) AdmissionregistrationCallCount() int {
+	fake.admissionregistrationMutex.RLock()
+	defer fake.admissionregistrationMutex.RUnlock()
+	return len(fake.admissionregistrationArgsForCall)
+}
+
+func (fake *FakeK8sClient) AdmissionregistrationReturns(result1 admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface) {
+	fake.AdmissionregistrationStub = nil
+	fake.admissionregistrationReturns = struct {
+		result1 admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AdmissionregistrationReturnsOnCall(i int, result1 admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface) {
+	fake.AdmissionregistrationStub = nil
+	if fake.admissionregistrationReturnsOnCall == nil {
+		fake.admissionregistrationReturnsOnCall = make(map[int]struct {
+			result1 admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface
+		})
+	}
+	fake.admissionregistrationReturnsOnCall[i] = struct {
+		result1 admissionregistrationv1beta1.AdmissionregistrationV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AppsV1beta1() appsv1beta1.AppsV1beta1Interface {
+	fake.appsV1beta1Mutex.Lock()
+	ret, specificReturn := fake.appsV1beta1ReturnsOnCall[len(fake.appsV1beta1ArgsForCall)]
+	fake.appsV1beta1ArgsForCall = append(fake.appsV1beta1ArgsForCall, struct{}{})
+	fake.recordInvocation("AppsV1beta1", []interface{}{})
+	fake.appsV1beta1Mutex.Unlock()
+	if fake.AppsV1beta1Stub != nil {
+		return fake.AppsV1beta1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.appsV1beta1Returns.result1
+}
+
+func (fake *FakeK8sClient) AppsV1beta1CallCount() int {
+	fake.appsV1beta1Mutex.RLock()
+	defer fake.appsV1beta1Mutex.RUnlock()
+	return len(fake.appsV1beta1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) AppsV1beta1Returns(result1 appsv1beta1.AppsV1beta1Interface) {
+	fake.AppsV1beta1Stub = nil
+	fake.appsV1beta1Returns = struct {
+		result1 appsv1beta1.AppsV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AppsV1beta1ReturnsOnCall(i int, result1 appsv1beta1.AppsV1beta1Interface) {
+	fake.AppsV1beta1Stub = nil
+	if fake.appsV1beta1ReturnsOnCall == nil {
+		fake.appsV1beta1ReturnsOnCall = make(map[int]struct {
+			result1 appsv1beta1.AppsV1beta1Interface
+		})
+	}
+	fake.appsV1beta1ReturnsOnCall[i] = struct {
+		result1 appsv1beta1.AppsV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AppsV1beta2() appsv1beta2.AppsV1beta2Interface {
+	fake.appsV1beta2Mutex.Lock()
+	ret, specificReturn := fake.appsV1beta2ReturnsOnCall[len(fake.appsV1beta2ArgsForCall)]
+	fake.appsV1beta2ArgsForCall = append(fake.appsV1beta2ArgsForCall, struct{}{})
+	fake.recordInvocation("AppsV1beta2", []interface{}{})
+	fake.appsV1beta2Mutex.Unlock()
+	if fake.AppsV1beta2Stub != nil {
+		return fake.AppsV1beta2Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.appsV1beta2Returns.result1
+}
+
+func (fake *FakeK8sClient) AppsV1beta2CallCount() int {
+	fake.appsV1beta2Mutex.RLock()
+	defer fake.appsV1beta2Mutex.RUnlock()
+	return len(fake.appsV1beta2ArgsForCall)
+}
+
+func (fake *FakeK8sClient) AppsV1beta2Returns(result1 appsv1beta2.AppsV1beta2Interface) {
+	fake.AppsV1beta2Stub = nil
+	fake.appsV1beta2Returns = struct {
+		result1 appsv1beta2.AppsV1beta2Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AppsV1beta2ReturnsOnCall(i int, result1 appsv1beta2.AppsV1beta2Interface) {
+	fake.AppsV1beta2Stub = nil
+	if fake.appsV1beta2ReturnsOnCall == nil {
+		fake.appsV1beta2ReturnsOnCall = make(map[int]struct {
+			result1 appsv1beta2.AppsV1beta2Interface
+		})
+	}
+	fake.appsV1beta2ReturnsOnCall[i] = struct {
+		result1 appsv1beta2.AppsV1beta2Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AppsV1() appsv1.AppsV1Interface {
+	fake.appsV1Mutex.Lock()
+	ret, specificReturn := fake.appsV1ReturnsOnCall[len(fake.appsV1ArgsForCall)]
+	fake.appsV1ArgsForCall = append(fake.appsV1ArgsForCall, struct{}{})
+	fake.recordInvocation("AppsV1", []interface{}{})
+	fake.appsV1Mutex.Unlock()
+	if fake.AppsV1Stub != nil {
+		return fake.AppsV1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.appsV1Returns.result1
+}
+
+func (fake *FakeK8sClient) AppsV1CallCount() int {
+	fake.appsV1Mutex.RLock()
+	defer fake.appsV1Mutex.RUnlock()
+	return len(fake.appsV1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) AppsV1Returns(result1 appsv1.AppsV1Interface) {
+	fake.AppsV1Stub = nil
+	fake.appsV1Returns = struct {
+		result1 appsv1.AppsV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AppsV1ReturnsOnCall(i int, result1 appsv1.AppsV1Interface) {
+	fake.AppsV1Stub = nil
+	if fake.appsV1ReturnsOnCall == nil {
+		fake.appsV1ReturnsOnCall = make(map[int]struct {
+			result1 appsv1.AppsV1Interface
+		})
+	}
+	fake.appsV1ReturnsOnCall[i] = struct {
+		result1 appsv1.AppsV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) Apps() appsv1.AppsV1Interface {
+	fake.appsMutex.Lock()
+	ret, specificReturn := fake.appsReturnsOnCall[len(fake.appsArgsForCall)]
+	fake.appsArgsForCall = append(fake.appsArgsForCall, struct{}{})
+	fake.recordInvocation("Apps", []interface{}{})
+	fake.appsMutex.Unlock()
+	if fake.AppsStub != nil {
+		return fake.AppsStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.appsReturns.result1
+}
+
+func (fake *FakeK8sClient) AppsCallCount() int {
+	fake.appsMutex.RLock()
+	defer fake.appsMutex.RUnlock()
+	return len(fake.appsArgsForCall)
+}
+
+func (fake *FakeK8sClient) AppsReturns(result1 appsv1.AppsV1Interface) {
+	fake.AppsStub = nil
+	fake.appsReturns = struct {
+		result1 appsv1.AppsV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AppsReturnsOnCall(i int, result1 appsv1.AppsV1Interface) {
+	fake.AppsStub = nil
+	if fake.appsReturnsOnCall == nil {
+		fake.appsReturnsOnCall = make(map[int]struct {
+			result1 appsv1.AppsV1Interface
+		})
+	}
+	fake.appsReturnsOnCall[i] = struct {
+		result1 appsv1.AppsV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AuditregistrationV1alpha1() auditregistrationv1alpha1.AuditregistrationV1alpha1Interface {
+	fake.auditregistrationV1alpha1Mutex.Lock()
+	ret, specificReturn := fake.auditregistrationV1alpha1ReturnsOnCall[len(fake.auditregistrationV1alpha1ArgsForCall)]
+	fake.auditregistrationV1alpha1ArgsForCall = append(fake.auditregistrationV1alpha1ArgsForCall, struct{}{})
+	fake.recordInvocation("AuditregistrationV1alpha1", []interface{}{})
+	fake.auditregistrationV1alpha1Mutex.Unlock()
+	if fake.AuditregistrationV1alpha1Stub != nil {
+		return fake.AuditregistrationV1alpha1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.auditregistrationV1alpha1Returns.result1
+}
+
+func (fake *FakeK8sClient) AuditregistrationV1alpha1CallCount() int {
+	fake.auditregistrationV1alpha1Mutex.RLock()
+	defer fake.auditregistrationV1alpha1Mutex.RUnlock()
+	return len(fake.auditregistrationV1alpha1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) AuditregistrationV1alpha1Returns(result1 auditregistrationv1alpha1.AuditregistrationV1alpha1Interface) {
+	fake.AuditregistrationV1alpha1Stub = nil
+	fake.auditregistrationV1alpha1Returns = struct {
+		result1 auditregistrationv1alpha1.AuditregistrationV1alpha1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AuditregistrationV1alpha1ReturnsOnCall(i int, result1 auditregistrationv1alpha1.AuditregistrationV1alpha1Interface) {
+	fake.AuditregistrationV1alpha1Stub = nil
+	if fake.auditregistrationV1alpha1ReturnsOnCall == nil {
+		fake.auditregistrationV1alpha1ReturnsOnCall = make(map[int]struct {
+			result1 auditregistrationv1alpha1.AuditregistrationV1alpha1Interface
+		})
+	}
+	fake.auditregistrationV1alpha1ReturnsOnCall[i] = struct {
+		result1 auditregistrationv1alpha1.AuditregistrationV1alpha1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) Auditregistration() auditregistrationv1alpha1.AuditregistrationV1alpha1Interface {
+	fake.auditregistrationMutex.Lock()
+	ret, specificReturn := fake.auditregistrationReturnsOnCall[len(fake.auditregistrationArgsForCall)]
+	fake.auditregistrationArgsForCall = append(fake.auditregistrationArgsForCall, struct{}{})
+	fake.recordInvocation("Auditregistration", []interface{}{})
+	fake.auditregistrationMutex.Unlock()
+	if fake.AuditregistrationStub != nil {
+		return fake.AuditregistrationStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.auditregistrationReturns.result1
+}
+
+func (fake *FakeK8sClient) AuditregistrationCallCount() int {
+	fake.auditregistrationMutex.RLock()
+	defer fake.auditregistrationMutex.RUnlock()
+	return len(fake.auditregistrationArgsForCall)
+}
+
+func (fake *FakeK8sClient) AuditregistrationReturns(result1 auditregistrationv1alpha1.AuditregistrationV1alpha1Interface) {
+	fake.AuditregistrationStub = nil
+	fake.auditregistrationReturns = struct {
+		result1 auditregistrationv1alpha1.AuditregistrationV1alpha1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AuditregistrationReturnsOnCall(i int, result1 auditregistrationv1alpha1.AuditregistrationV1alpha1Interface) {
+	fake.AuditregistrationStub = nil
+	if fake.auditregistrationReturnsOnCall == nil {
+		fake.auditregistrationReturnsOnCall = make(map[int]struct {
+			result1 auditregistrationv1alpha1.AuditregistrationV1alpha1Interface
+		})
+	}
+	fake.auditregistrationReturnsOnCall[i] = struct {
+		result1 auditregistrationv1alpha1.AuditregistrationV1alpha1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AuthenticationV1() authenticationv1.AuthenticationV1Interface {
+	fake.authenticationV1Mutex.Lock()
+	ret, specificReturn := fake.authenticationV1ReturnsOnCall[len(fake.authenticationV1ArgsForCall)]
+	fake.authenticationV1ArgsForCall = append(fake.authenticationV1ArgsForCall, struct{}{})
+	fake.recordInvocation("AuthenticationV1", []interface{}{})
+	fake.authenticationV1Mutex.Unlock()
+	if fake.AuthenticationV1Stub != nil {
+		return fake.AuthenticationV1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.authenticationV1Returns.result1
+}
+
+func (fake *FakeK8sClient) AuthenticationV1CallCount() int {
+	fake.authenticationV1Mutex.RLock()
+	defer fake.authenticationV1Mutex.RUnlock()
+	return len(fake.authenticationV1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) AuthenticationV1Returns(result1 authenticationv1.AuthenticationV1Interface) {
+	fake.AuthenticationV1Stub = nil
+	fake.authenticationV1Returns = struct {
+		result1 authenticationv1.AuthenticationV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AuthenticationV1ReturnsOnCall(i int, result1 authenticationv1.AuthenticationV1Interface) {
+	fake.AuthenticationV1Stub = nil
+	if fake.authenticationV1ReturnsOnCall == nil {
+		fake.authenticationV1ReturnsOnCall = make(map[int]struct {
+			result1 authenticationv1.AuthenticationV1Interface
+		})
+	}
+	fake.authenticationV1ReturnsOnCall[i] = struct {
+		result1 authenticationv1.AuthenticationV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) Authentication() authenticationv1.AuthenticationV1Interface {
+	fake.authenticationMutex.Lock()
+	ret, specificReturn := fake.authenticationReturnsOnCall[len(fake.authenticationArgsForCall)]
+	fake.authenticationArgsForCall = append(fake.authenticationArgsForCall, struct{}{})
+	fake.recordInvocation("Authentication", []interface{}{})
+	fake.authenticationMutex.Unlock()
+	if fake.AuthenticationStub != nil {
+		return fake.AuthenticationStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.authenticationReturns.result1
+}
+
+func (fake *FakeK8sClient) AuthenticationCallCount() int {
+	fake.authenticationMutex.RLock()
+	defer fake.authenticationMutex.RUnlock()
+	return len(fake.authenticationArgsForCall)
+}
+
+func (fake *FakeK8sClient) AuthenticationReturns(result1 authenticationv1.AuthenticationV1Interface) {
+	fake.AuthenticationStub = nil
+	fake.authenticationReturns = struct {
+		result1 authenticationv1.AuthenticationV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AuthenticationReturnsOnCall(i int, result1 authenticationv1.AuthenticationV1Interface) {
+	fake.AuthenticationStub = nil
+	if fake.authenticationReturnsOnCall == nil {
+		fake.authenticationReturnsOnCall = make(map[int]struct {
+			result1 authenticationv1.AuthenticationV1Interface
+		})
+	}
+	fake.authenticationReturnsOnCall[i] = struct {
+		result1 authenticationv1.AuthenticationV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AuthenticationV1beta1() authenticationv1beta1.AuthenticationV1beta1Interface {
+	fake.authenticationV1beta1Mutex.Lock()
+	ret, specificReturn := fake.authenticationV1beta1ReturnsOnCall[len(fake.authenticationV1beta1ArgsForCall)]
+	fake.authenticationV1beta1ArgsForCall = append(fake.authenticationV1beta1ArgsForCall, struct{}{})
+	fake.recordInvocation("AuthenticationV1beta1", []interface{}{})
+	fake.authenticationV1beta1Mutex.Unlock()
+	if fake.AuthenticationV1beta1Stub != nil {
+		return fake.AuthenticationV1beta1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.authenticationV1beta1Returns.result1
+}
+
+func (fake *FakeK8sClient) AuthenticationV1beta1CallCount() int {
+	fake.authenticationV1beta1Mutex.RLock()
+	defer fake.authenticationV1beta1Mutex.RUnlock()
+	return len(fake.authenticationV1beta1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) AuthenticationV1beta1Returns(result1 authenticationv1beta1.AuthenticationV1beta1Interface) {
+	fake.AuthenticationV1beta1Stub = nil
+	fake.authenticationV1beta1Returns = struct {
+		result1 authenticationv1beta1.AuthenticationV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AuthenticationV1beta1ReturnsOnCall(i int, result1 authenticationv1beta1.AuthenticationV1beta1Interface) {
+	fake.AuthenticationV1beta1Stub = nil
+	if fake.authenticationV1beta1ReturnsOnCall == nil {
+		fake.authenticationV1beta1ReturnsOnCall = make(map[int]struct {
+			result1 authenticationv1beta1.AuthenticationV1beta1Interface
+		})
+	}
+	fake.authenticationV1beta1ReturnsOnCall[i] = struct {
+		result1 authenticationv1beta1.AuthenticationV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AuthorizationV1() authorizationv1.AuthorizationV1Interface {
+	fake.authorizationV1Mutex.Lock()
+	ret, specificReturn := fake.authorizationV1ReturnsOnCall[len(fake.authorizationV1ArgsForCall)]
+	fake.authorizationV1ArgsForCall = append(fake.authorizationV1ArgsForCall, struct{}{})
+	fake.recordInvocation("AuthorizationV1", []interface{}{})
+	fake.authorizationV1Mutex.Unlock()
+	if fake.AuthorizationV1Stub != nil {
+		return fake.AuthorizationV1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.authorizationV1Returns.result1
+}
+
+func (fake *FakeK8sClient) AuthorizationV1CallCount() int {
+	fake.authorizationV1Mutex.RLock()
+	defer fake.authorizationV1Mutex.RUnlock()
+	return len(fake.authorizationV1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) AuthorizationV1Returns(result1 authorizationv1.AuthorizationV1Interface) {
+	fake.AuthorizationV1Stub = nil
+	fake.authorizationV1Returns = struct {
+		result1 authorizationv1.AuthorizationV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AuthorizationV1ReturnsOnCall(i int, result1 authorizationv1.AuthorizationV1Interface) {
+	fake.AuthorizationV1Stub = nil
+	if fake.authorizationV1ReturnsOnCall == nil {
+		fake.authorizationV1ReturnsOnCall = make(map[int]struct {
+			result1 authorizationv1.AuthorizationV1Interface
+		})
+	}
+	fake.authorizationV1ReturnsOnCall[i] = struct {
+		result1 authorizationv1.AuthorizationV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) Authorization() authorizationv1.AuthorizationV1Interface {
+	fake.authorizationMutex.Lock()
+	ret, specificReturn := fake.authorizationReturnsOnCall[len(fake.authorizationArgsForCall)]
+	fake.authorizationArgsForCall = append(fake.authorizationArgsForCall, struct{}{})
+	fake.recordInvocation("Authorization", []interface{}{})
+	fake.authorizationMutex.Unlock()
+	if fake.AuthorizationStub != nil {
+		return fake.AuthorizationStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.authorizationReturns.result1
+}
+
+func (fake *FakeK8sClient) AuthorizationCallCount() int {
+	fake.authorizationMutex.RLock()
+	defer fake.authorizationMutex.RUnlock()
+	return len(fake.authorizationArgsForCall)
+}
+
+func (fake *FakeK8sClient) AuthorizationReturns(result1 authorizationv1.AuthorizationV1Interface) {
+	fake.AuthorizationStub = nil
+	fake.authorizationReturns = struct {
+		result1 authorizationv1.AuthorizationV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AuthorizationReturnsOnCall(i int, result1 authorizationv1.AuthorizationV1Interface) {
+	fake.AuthorizationStub = nil
+	if fake.authorizationReturnsOnCall == nil {
+		fake.authorizationReturnsOnCall = make(map[int]struct {
+			result1 authorizationv1.AuthorizationV1Interface
+		})
+	}
+	fake.authorizationReturnsOnCall[i] = struct {
+		result1 authorizationv1.AuthorizationV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AuthorizationV1beta1() authorizationv1beta1.AuthorizationV1beta1Interface {
+	fake.authorizationV1beta1Mutex.Lock()
+	ret, specificReturn := fake.authorizationV1beta1ReturnsOnCall[len(fake.authorizationV1beta1ArgsForCall)]
+	fake.authorizationV1beta1ArgsForCall = append(fake.authorizationV1beta1ArgsForCall, struct{}{})
+	fake.recordInvocation("AuthorizationV1beta1", []interface{}{})
+	fake.authorizationV1beta1Mutex.Unlock()
+	if fake.AuthorizationV1beta1Stub != nil {
+		return fake.AuthorizationV1beta1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.authorizationV1beta1Returns.result1
+}
+
+func (fake *FakeK8sClient) AuthorizationV1beta1CallCount() int {
+	fake.authorizationV1beta1Mutex.RLock()
+	defer fake.authorizationV1beta1Mutex.RUnlock()
+	return len(fake.authorizationV1beta1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) AuthorizationV1beta1Returns(result1 authorizationv1beta1.AuthorizationV1beta1Interface) {
+	fake.AuthorizationV1beta1Stub = nil
+	fake.authorizationV1beta1Returns = struct {
+		result1 authorizationv1beta1.AuthorizationV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AuthorizationV1beta1ReturnsOnCall(i int, result1 authorizationv1beta1.AuthorizationV1beta1Interface) {
+	fake.AuthorizationV1beta1Stub = nil
+	if fake.authorizationV1beta1ReturnsOnCall == nil {
+		fake.authorizationV1beta1ReturnsOnCall = make(map[int]struct {
+			result1 authorizationv1beta1.AuthorizationV1beta1Interface
+		})
+	}
+	fake.authorizationV1beta1ReturnsOnCall[i] = struct {
+		result1 authorizationv1beta1.AuthorizationV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AutoscalingV1() autoscalingv1.AutoscalingV1Interface {
+	fake.autoscalingV1Mutex.Lock()
+	ret, specificReturn := fake.autoscalingV1ReturnsOnCall[len(fake.autoscalingV1ArgsForCall)]
+	fake.autoscalingV1ArgsForCall = append(fake.autoscalingV1ArgsForCall, struct{}{})
+	fake.recordInvocation("AutoscalingV1", []interface{}{})
+	fake.autoscalingV1Mutex.Unlock()
+	if fake.AutoscalingV1Stub != nil {
+		return fake.AutoscalingV1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.autoscalingV1Returns.result1
+}
+
+func (fake *FakeK8sClient) AutoscalingV1CallCount() int {
+	fake.autoscalingV1Mutex.RLock()
+	defer fake.autoscalingV1Mutex.RUnlock()
+	return len(fake.autoscalingV1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) AutoscalingV1Returns(result1 autoscalingv1.AutoscalingV1Interface) {
+	fake.AutoscalingV1Stub = nil
+	fake.autoscalingV1Returns = struct {
+		result1 autoscalingv1.AutoscalingV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AutoscalingV1ReturnsOnCall(i int, result1 autoscalingv1.AutoscalingV1Interface) {
+	fake.AutoscalingV1Stub = nil
+	if fake.autoscalingV1ReturnsOnCall == nil {
+		fake.autoscalingV1ReturnsOnCall = make(map[int]struct {
+			result1 autoscalingv1.AutoscalingV1Interface
+		})
+	}
+	fake.autoscalingV1ReturnsOnCall[i] = struct {
+		result1 autoscalingv1.AutoscalingV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) Autoscaling() autoscalingv1.AutoscalingV1Interface {
+	fake.autoscalingMutex.Lock()
+	ret, specificReturn := fake.autoscalingReturnsOnCall[len(fake.autoscalingArgsForCall)]
+	fake.autoscalingArgsForCall = append(fake.autoscalingArgsForCall, struct{}{})
+	fake.recordInvocation("Autoscaling", []interface{}{})
+	fake.autoscalingMutex.Unlock()
+	if fake.AutoscalingStub != nil {
+		return fake.AutoscalingStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.autoscalingReturns.result1
+}
+
+func (fake *FakeK8sClient) AutoscalingCallCount() int {
+	fake.autoscalingMutex.RLock()
+	defer fake.autoscalingMutex.RUnlock()
+	return len(fake.autoscalingArgsForCall)
+}
+
+func (fake *FakeK8sClient) AutoscalingReturns(result1 autoscalingv1.AutoscalingV1Interface) {
+	fake.AutoscalingStub = nil
+	fake.autoscalingReturns = struct {
+		result1 autoscalingv1.AutoscalingV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AutoscalingReturnsOnCall(i int, result1 autoscalingv1.AutoscalingV1Interface) {
+	fake.AutoscalingStub = nil
+	if fake.autoscalingReturnsOnCall == nil {
+		fake.autoscalingReturnsOnCall = make(map[int]struct {
+			result1 autoscalingv1.AutoscalingV1Interface
+		})
+	}
+	fake.autoscalingReturnsOnCall[i] = struct {
+		result1 autoscalingv1.AutoscalingV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AutoscalingV2beta1() autoscalingv2beta1.AutoscalingV2beta1Interface {
+	fake.autoscalingV2beta1Mutex.Lock()
+	ret, specificReturn := fake.autoscalingV2beta1ReturnsOnCall[len(fake.autoscalingV2beta1ArgsForCall)]
+	fake.autoscalingV2beta1ArgsForCall = append(fake.autoscalingV2beta1ArgsForCall, struct{}{})
+	fake.recordInvocation("AutoscalingV2beta1", []interface{}{})
+	fake.autoscalingV2beta1Mutex.Unlock()
+	if fake.AutoscalingV2beta1Stub != nil {
+		return fake.AutoscalingV2beta1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.autoscalingV2beta1Returns.result1
+}
+
+func (fake *FakeK8sClient) AutoscalingV2beta1CallCount() int {
+	fake.autoscalingV2beta1Mutex.RLock()
+	defer fake.autoscalingV2beta1Mutex.RUnlock()
+	return len(fake.autoscalingV2beta1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) AutoscalingV2beta1Returns(result1 autoscalingv2beta1.AutoscalingV2beta1Interface) {
+	fake.AutoscalingV2beta1Stub = nil
+	fake.autoscalingV2beta1Returns = struct {
+		result1 autoscalingv2beta1.AutoscalingV2beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AutoscalingV2beta1ReturnsOnCall(i int, result1 autoscalingv2beta1.AutoscalingV2beta1Interface) {
+	fake.AutoscalingV2beta1Stub = nil
+	if fake.autoscalingV2beta1ReturnsOnCall == nil {
+		fake.autoscalingV2beta1ReturnsOnCall = make(map[int]struct {
+			result1 autoscalingv2beta1.AutoscalingV2beta1Interface
+		})
+	}
+	fake.autoscalingV2beta1ReturnsOnCall[i] = struct {
+		result1 autoscalingv2beta1.AutoscalingV2beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AutoscalingV2beta2() autoscalingv2beta2.AutoscalingV2beta2Interface {
+	fake.autoscalingV2beta2Mutex.Lock()
+	ret, specificReturn := fake.autoscalingV2beta2ReturnsOnCall[len(fake.autoscalingV2beta2ArgsForCall)]
+	fake.autoscalingV2beta2ArgsForCall = append(fake.autoscalingV2beta2ArgsForCall, struct{}{})
+	fake.recordInvocation("AutoscalingV2beta2", []interface{}{})
+	fake.autoscalingV2beta2Mutex.Unlock()
+	if fake.AutoscalingV2beta2Stub != nil {
+		return fake.AutoscalingV2beta2Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.autoscalingV2beta2Returns.result1
+}
+
+func (fake *FakeK8sClient) AutoscalingV2beta2CallCount() int {
+	fake.autoscalingV2beta2Mutex.RLock()
+	defer fake.autoscalingV2beta2Mutex.RUnlock()
+	return len(fake.autoscalingV2beta2ArgsForCall)
+}
+
+func (fake *FakeK8sClient) AutoscalingV2beta2Returns(result1 autoscalingv2beta2.AutoscalingV2beta2Interface) {
+	fake.AutoscalingV2beta2Stub = nil
+	fake.autoscalingV2beta2Returns = struct {
+		result1 autoscalingv2beta2.AutoscalingV2beta2Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) AutoscalingV2beta2ReturnsOnCall(i int, result1 autoscalingv2beta2.AutoscalingV2beta2Interface) {
+	fake.AutoscalingV2beta2Stub = nil
+	if fake.autoscalingV2beta2ReturnsOnCall == nil {
+		fake.autoscalingV2beta2ReturnsOnCall = make(map[int]struct {
+			result1 autoscalingv2beta2.AutoscalingV2beta2Interface
+		})
+	}
+	fake.autoscalingV2beta2ReturnsOnCall[i] = struct {
+		result1 autoscalingv2beta2.AutoscalingV2beta2Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) BatchV1() batchv1.BatchV1Interface {
+	fake.batchV1Mutex.Lock()
+	ret, specificReturn := fake.batchV1ReturnsOnCall[len(fake.batchV1ArgsForCall)]
+	fake.batchV1ArgsForCall = append(fake.batchV1ArgsForCall, struct{}{})
+	fake.recordInvocation("BatchV1", []interface{}{})
+	fake.batchV1Mutex.Unlock()
+	if fake.BatchV1Stub != nil {
+		return fake.BatchV1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.batchV1Returns.result1
+}
+
+func (fake *FakeK8sClient) BatchV1CallCount() int {
+	fake.batchV1Mutex.RLock()
+	defer fake.batchV1Mutex.RUnlock()
+	return len(fake.batchV1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) BatchV1Returns(result1 batchv1.BatchV1Interface) {
+	fake.BatchV1Stub = nil
+	fake.batchV1Returns = struct {
+		result1 batchv1.BatchV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) BatchV1ReturnsOnCall(i int, result1 batchv1.BatchV1Interface) {
+	fake.BatchV1Stub = nil
+	if fake.batchV1ReturnsOnCall == nil {
+		fake.batchV1ReturnsOnCall = make(map[int]struct {
+			result1 batchv1.BatchV1Interface
+		})
+	}
+	fake.batchV1ReturnsOnCall[i] = struct {
+		result1 batchv1.BatchV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) Batch() batchv1.BatchV1Interface {
+	fake.batchMutex.Lock()
+	ret, specificReturn := fake.batchReturnsOnCall[len(fake.batchArgsForCall)]
+	fake.batchArgsForCall = append(fake.batchArgsForCall, struct{}{})
+	fake.recordInvocation("Batch", []interface{}{})
+	fake.batchMutex.Unlock()
+	if fake.BatchStub != nil {
+		return fake.BatchStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.batchReturns.result1
+}
+
+func (fake *FakeK8sClient) BatchCallCount() int {
+	fake.batchMutex.RLock()
+	defer fake.batchMutex.RUnlock()
+	return len(fake.batchArgsForCall)
+}
+
+func (fake *FakeK8sClient) BatchReturns(result1 batchv1.BatchV1Interface) {
+	fake.BatchStub = nil
+	fake.batchReturns = struct {
+		result1 batchv1.BatchV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) BatchReturnsOnCall(i int, result1 batchv1.BatchV1Interface) {
+	fake.BatchStub = nil
+	if fake.batchReturnsOnCall == nil {
+		fake.batchReturnsOnCall = make(map[int]struct {
+			result1 batchv1.BatchV1Interface
+		})
+	}
+	fake.batchReturnsOnCall[i] = struct {
+		result1 batchv1.BatchV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) BatchV1beta1() batchv1beta1.BatchV1beta1Interface {
+	fake.batchV1beta1Mutex.Lock()
+	ret, specificReturn := fake.batchV1beta1ReturnsOnCall[len(fake.batchV1beta1ArgsForCall)]
+	fake.batchV1beta1ArgsForCall = append(fake.batchV1beta1ArgsForCall, struct{}{})
+	fake.recordInvocation("BatchV1beta1", []interface{}{})
+	fake.batchV1beta1Mutex.Unlock()
+	if fake.BatchV1beta1Stub != nil {
+		return fake.BatchV1beta1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.batchV1beta1Returns.result1
+}
+
+func (fake *FakeK8sClient) BatchV1beta1CallCount() int {
+	fake.batchV1beta1Mutex.RLock()
+	defer fake.batchV1beta1Mutex.RUnlock()
+	return len(fake.batchV1beta1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) BatchV1beta1Returns(result1 batchv1beta1.BatchV1beta1Interface) {
+	fake.BatchV1beta1Stub = nil
+	fake.batchV1beta1Returns = struct {
+		result1 batchv1beta1.BatchV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) BatchV1beta1ReturnsOnCall(i int, result1 batchv1beta1.BatchV1beta1Interface) {
+	fake.BatchV1beta1Stub = nil
+	if fake.batchV1beta1ReturnsOnCall == nil {
+		fake.batchV1beta1ReturnsOnCall = make(map[int]struct {
+			result1 batchv1beta1.BatchV1beta1Interface
+		})
+	}
+	fake.batchV1beta1ReturnsOnCall[i] = struct {
+		result1 batchv1beta1.BatchV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) BatchV2alpha1() batchv2alpha1.BatchV2alpha1Interface {
+	fake.batchV2alpha1Mutex.Lock()
+	ret, specificReturn := fake.batchV2alpha1ReturnsOnCall[len(fake.batchV2alpha1ArgsForCall)]
+	fake.batchV2alpha1ArgsForCall = append(fake.batchV2alpha1ArgsForCall, struct{}{})
+	fake.recordInvocation("BatchV2alpha1", []interface{}{})
+	fake.batchV2alpha1Mutex.Unlock()
+	if fake.BatchV2alpha1Stub != nil {
+		return fake.BatchV2alpha1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.batchV2alpha1Returns.result1
+}
+
+func (fake *FakeK8sClient) BatchV2alpha1CallCount() int {
+	fake.batchV2alpha1Mutex.RLock()
+	defer fake.batchV2alpha1Mutex.RUnlock()
+	return len(fake.batchV2alpha1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) BatchV2alpha1Returns(result1 batchv2alpha1.BatchV2alpha1Interface) {
+	fake.BatchV2alpha1Stub = nil
+	fake.batchV2alpha1Returns = struct {
+		result1 batchv2alpha1.BatchV2alpha1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) BatchV2alpha1ReturnsOnCall(i int, result1 batchv2alpha1.BatchV2alpha1Interface) {
+	fake.BatchV2alpha1Stub = nil
+	if fake.batchV2alpha1ReturnsOnCall == nil {
+		fake.batchV2alpha1ReturnsOnCall = make(map[int]struct {
+			result1 batchv2alpha1.BatchV2alpha1Interface
+		})
+	}
+	fake.batchV2alpha1ReturnsOnCall[i] = struct {
+		result1 batchv2alpha1.BatchV2alpha1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) CertificatesV1beta1() certificatesv1beta1.CertificatesV1beta1Interface {
+	fake.certificatesV1beta1Mutex.Lock()
+	ret, specificReturn := fake.certificatesV1beta1ReturnsOnCall[len(fake.certificatesV1beta1ArgsForCall)]
+	fake.certificatesV1beta1ArgsForCall = append(fake.certificatesV1beta1ArgsForCall, struct{}{})
+	fake.recordInvocation("CertificatesV1beta1", []interface{}{})
+	fake.certificatesV1beta1Mutex.Unlock()
+	if fake.CertificatesV1beta1Stub != nil {
+		return fake.CertificatesV1beta1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.certificatesV1beta1Returns.result1
+}
+
+func (fake *FakeK8sClient) CertificatesV1beta1CallCount() int {
+	fake.certificatesV1beta1Mutex.RLock()
+	defer fake.certificatesV1beta1Mutex.RUnlock()
+	return len(fake.certificatesV1beta1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) CertificatesV1beta1Returns(result1 certificatesv1beta1.CertificatesV1beta1Interface) {
+	fake.CertificatesV1beta1Stub = nil
+	fake.certificatesV1beta1Returns = struct {
+		result1 certificatesv1beta1.CertificatesV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) CertificatesV1beta1ReturnsOnCall(i int, result1 certificatesv1beta1.CertificatesV1beta1Interface) {
+	fake.CertificatesV1beta1Stub = nil
+	if fake.certificatesV1beta1ReturnsOnCall == nil {
+		fake.certificatesV1beta1ReturnsOnCall = make(map[int]struct {
+			result1 certificatesv1beta1.CertificatesV1beta1Interface
+		})
+	}
+	fake.certificatesV1beta1ReturnsOnCall[i] = struct {
+		result1 certificatesv1beta1.CertificatesV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) Certificates() certificatesv1beta1.CertificatesV1beta1Interface {
+	fake.certificatesMutex.Lock()
+	ret, specificReturn := fake.certificatesReturnsOnCall[len(fake.certificatesArgsForCall)]
+	fake.certificatesArgsForCall = append(fake.certificatesArgsForCall, struct{}{})
+	fake.recordInvocation("Certificates", []interface{}{})
+	fake.certificatesMutex.Unlock()
+	if fake.CertificatesStub != nil {
+		return fake.CertificatesStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.certificatesReturns.result1
+}
+
+func (fake *FakeK8sClient) CertificatesCallCount() int {
+	fake.certificatesMutex.RLock()
+	defer fake.certificatesMutex.RUnlock()
+	return len(fake.certificatesArgsForCall)
+}
+
+func (fake *FakeK8sClient) CertificatesReturns(result1 certificatesv1beta1.CertificatesV1beta1Interface) {
+	fake.CertificatesStub = nil
+	fake.certificatesReturns = struct {
+		result1 certificatesv1beta1.CertificatesV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) CertificatesReturnsOnCall(i int, result1 certificatesv1beta1.CertificatesV1beta1Interface) {
+	fake.CertificatesStub = nil
+	if fake.certificatesReturnsOnCall == nil {
+		fake.certificatesReturnsOnCall = make(map[int]struct {
+			result1 certificatesv1beta1.CertificatesV1beta1Interface
+		})
+	}
+	fake.certificatesReturnsOnCall[i] = struct {
+		result1 certificatesv1beta1.CertificatesV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) CoordinationV1beta1() coordinationv1beta1.CoordinationV1beta1Interface {
+	fake.coordinationV1beta1Mutex.Lock()
+	ret, specificReturn := fake.coordinationV1beta1ReturnsOnCall[len(fake.coordinationV1beta1ArgsForCall)]
+	fake.coordinationV1beta1ArgsForCall = append(fake.coordinationV1beta1ArgsForCall, struct{}{})
+	fake.recordInvocation("CoordinationV1beta1", []interface{}{})
+	fake.coordinationV1beta1Mutex.Unlock()
+	if fake.CoordinationV1beta1Stub != nil {
+		return fake.CoordinationV1beta1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.coordinationV1beta1Returns.result1
+}
+
+func (fake *FakeK8sClient) CoordinationV1beta1CallCount() int {
+	fake.coordinationV1beta1Mutex.RLock()
+	defer fake.coordinationV1beta1Mutex.RUnlock()
+	return len(fake.coordinationV1beta1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) CoordinationV1beta1Returns(result1 coordinationv1beta1.CoordinationV1beta1Interface) {
+	fake.CoordinationV1beta1Stub = nil
+	fake.coordinationV1beta1Returns = struct {
+		result1 coordinationv1beta1.CoordinationV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) CoordinationV1beta1ReturnsOnCall(i int, result1 coordinationv1beta1.CoordinationV1beta1Interface) {
+	fake.CoordinationV1beta1Stub = nil
+	if fake.coordinationV1beta1ReturnsOnCall == nil {
+		fake.coordinationV1beta1ReturnsOnCall = make(map[int]struct {
+			result1 coordinationv1beta1.CoordinationV1beta1Interface
+		})
+	}
+	fake.coordinationV1beta1ReturnsOnCall[i] = struct {
+		result1 coordinationv1beta1.CoordinationV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) Coordination() coordinationv1beta1.CoordinationV1beta1Interface {
+	fake.coordinationMutex.Lock()
+	ret, specificReturn := fake.coordinationReturnsOnCall[len(fake.coordinationArgsForCall)]
+	fake.coordinationArgsForCall = append(fake.coordinationArgsForCall, struct{}{})
+	fake.recordInvocation("Coordination", []interface{}{})
+	fake.coordinationMutex.Unlock()
+	if fake.CoordinationStub != nil {
+		return fake.CoordinationStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.coordinationReturns.result1
+}
+
+func (fake *FakeK8sClient) CoordinationCallCount() int {
+	fake.coordinationMutex.RLock()
+	defer fake.coordinationMutex.RUnlock()
+	return len(fake.coordinationArgsForCall)
+}
+
+func (fake *FakeK8sClient) CoordinationReturns(result1 coordinationv1beta1.CoordinationV1beta1Interface) {
+	fake.CoordinationStub = nil
+	fake.coordinationReturns = struct {
+		result1 coordinationv1beta1.CoordinationV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) CoordinationReturnsOnCall(i int, result1 coordinationv1beta1.CoordinationV1beta1Interface) {
+	fake.CoordinationStub = nil
+	if fake.coordinationReturnsOnCall == nil {
+		fake.coordinationReturnsOnCall = make(map[int]struct {
+			result1 coordinationv1beta1.CoordinationV1beta1Interface
+		})
+	}
+	fake.coordinationReturnsOnCall[i] = struct {
+		result1 coordinationv1beta1.CoordinationV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) CoreV1() corev1.CoreV1Interface {
+	fake.coreV1Mutex.Lock()
+	ret, specificReturn := fake.coreV1ReturnsOnCall[len(fake.coreV1ArgsForCall)]
+	fake.coreV1ArgsForCall = append(fake.coreV1ArgsForCall, struct{}{})
+	fake.recordInvocation("CoreV1", []interface{}{})
+	fake.coreV1Mutex.Unlock()
+	if fake.CoreV1Stub != nil {
+		return fake.CoreV1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.coreV1Returns.result1
+}
+
+func (fake *FakeK8sClient) CoreV1CallCount() int {
+	fake.coreV1Mutex.RLock()
+	defer fake.coreV1Mutex.RUnlock()
+	return len(fake.coreV1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) CoreV1Returns(result1 corev1.CoreV1Interface) {
+	fake.CoreV1Stub = nil
+	fake.coreV1Returns = struct {
+		result1 corev1.CoreV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) CoreV1ReturnsOnCall(i int, result1 corev1.CoreV1Interface) {
+	fake.CoreV1Stub = nil
+	if fake.coreV1ReturnsOnCall == nil {
+		fake.coreV1ReturnsOnCall = make(map[int]struct {
+			result1 corev1.CoreV1Interface
+		})
+	}
+	fake.coreV1ReturnsOnCall[i] = struct {
+		result1 corev1.CoreV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) Core() corev1.CoreV1Interface {
+	fake.coreMutex.Lock()
+	ret, specificReturn := fake.coreReturnsOnCall[len(fake.coreArgsForCall)]
+	fake.coreArgsForCall = append(fake.coreArgsForCall, struct{}{})
+	fake.recordInvocation("Core", []interface{}{})
+	fake.coreMutex.Unlock()
+	if fake.CoreStub != nil {
+		return fake.CoreStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.coreReturns.result1
+}
+
+func (fake *FakeK8sClient) CoreCallCount() int {
+	fake.coreMutex.RLock()
+	defer fake.coreMutex.RUnlock()
+	return len(fake.coreArgsForCall)
+}
+
+func (fake *FakeK8sClient) CoreReturns(result1 corev1.CoreV1Interface) {
+	fake.CoreStub = nil
+	fake.coreReturns = struct {
+		result1 corev1.CoreV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) CoreReturnsOnCall(i int, result1 corev1.CoreV1Interface) {
+	fake.CoreStub = nil
+	if fake.coreReturnsOnCall == nil {
+		fake.coreReturnsOnCall = make(map[int]struct {
+			result1 corev1.CoreV1Interface
+		})
+	}
+	fake.coreReturnsOnCall[i] = struct {
+		result1 corev1.CoreV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) EventsV1beta1() eventsv1beta1.EventsV1beta1Interface {
 	fake.eventsV1beta1Mutex.Lock()
 	ret, specificReturn := fake.eventsV1beta1ReturnsOnCall[len(fake.eventsV1beta1ArgsForCall)]
-	fake.eventsV1beta1ArgsForCall = append(fake.eventsV1beta1ArgsForCall, struct {
-	}{})
+	fake.eventsV1beta1ArgsForCall = append(fake.eventsV1beta1ArgsForCall, struct{}{})
 	fake.recordInvocation("EventsV1beta1", []interface{}{})
 	fake.eventsV1beta1Mutex.Unlock()
 	if fake.EventsV1beta1Stub != nil {
@@ -2180,8 +1716,7 @@ func (fake *FakeK8sClient) EventsV1beta1() v1beta1g.EventsV1beta1Interface {
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.eventsV1beta1Returns
-	return fakeReturns.result1
+	return fake.eventsV1beta1Returns.result1
 }
 
 func (fake *FakeK8sClient) EventsV1beta1CallCount() int {
@@ -2190,92 +1725,69 @@ func (fake *FakeK8sClient) EventsV1beta1CallCount() int {
 	return len(fake.eventsV1beta1ArgsForCall)
 }
 
-func (fake *FakeK8sClient) EventsV1beta1Calls(stub func() v1beta1g.EventsV1beta1Interface) {
-	fake.eventsV1beta1Mutex.Lock()
-	defer fake.eventsV1beta1Mutex.Unlock()
-	fake.EventsV1beta1Stub = stub
-}
-
-func (fake *FakeK8sClient) EventsV1beta1Returns(result1 v1beta1g.EventsV1beta1Interface) {
-	fake.eventsV1beta1Mutex.Lock()
-	defer fake.eventsV1beta1Mutex.Unlock()
+func (fake *FakeK8sClient) EventsV1beta1Returns(result1 eventsv1beta1.EventsV1beta1Interface) {
 	fake.EventsV1beta1Stub = nil
 	fake.eventsV1beta1Returns = struct {
-		result1 v1beta1g.EventsV1beta1Interface
+		result1 eventsv1beta1.EventsV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) EventsV1beta1ReturnsOnCall(i int, result1 v1beta1g.EventsV1beta1Interface) {
-	fake.eventsV1beta1Mutex.Lock()
-	defer fake.eventsV1beta1Mutex.Unlock()
+func (fake *FakeK8sClient) EventsV1beta1ReturnsOnCall(i int, result1 eventsv1beta1.EventsV1beta1Interface) {
 	fake.EventsV1beta1Stub = nil
 	if fake.eventsV1beta1ReturnsOnCall == nil {
 		fake.eventsV1beta1ReturnsOnCall = make(map[int]struct {
-			result1 v1beta1g.EventsV1beta1Interface
+			result1 eventsv1beta1.EventsV1beta1Interface
 		})
 	}
 	fake.eventsV1beta1ReturnsOnCall[i] = struct {
-		result1 v1beta1g.EventsV1beta1Interface
+		result1 eventsv1beta1.EventsV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) Extensions() v1beta1h.ExtensionsV1beta1Interface {
-	fake.extensionsMutex.Lock()
-	ret, specificReturn := fake.extensionsReturnsOnCall[len(fake.extensionsArgsForCall)]
-	fake.extensionsArgsForCall = append(fake.extensionsArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Extensions", []interface{}{})
-	fake.extensionsMutex.Unlock()
-	if fake.ExtensionsStub != nil {
-		return fake.ExtensionsStub()
+func (fake *FakeK8sClient) Events() eventsv1beta1.EventsV1beta1Interface {
+	fake.eventsMutex.Lock()
+	ret, specificReturn := fake.eventsReturnsOnCall[len(fake.eventsArgsForCall)]
+	fake.eventsArgsForCall = append(fake.eventsArgsForCall, struct{}{})
+	fake.recordInvocation("Events", []interface{}{})
+	fake.eventsMutex.Unlock()
+	if fake.EventsStub != nil {
+		return fake.EventsStub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.extensionsReturns
-	return fakeReturns.result1
+	return fake.eventsReturns.result1
 }
 
-func (fake *FakeK8sClient) ExtensionsCallCount() int {
-	fake.extensionsMutex.RLock()
-	defer fake.extensionsMutex.RUnlock()
-	return len(fake.extensionsArgsForCall)
+func (fake *FakeK8sClient) EventsCallCount() int {
+	fake.eventsMutex.RLock()
+	defer fake.eventsMutex.RUnlock()
+	return len(fake.eventsArgsForCall)
 }
 
-func (fake *FakeK8sClient) ExtensionsCalls(stub func() v1beta1h.ExtensionsV1beta1Interface) {
-	fake.extensionsMutex.Lock()
-	defer fake.extensionsMutex.Unlock()
-	fake.ExtensionsStub = stub
-}
-
-func (fake *FakeK8sClient) ExtensionsReturns(result1 v1beta1h.ExtensionsV1beta1Interface) {
-	fake.extensionsMutex.Lock()
-	defer fake.extensionsMutex.Unlock()
-	fake.ExtensionsStub = nil
-	fake.extensionsReturns = struct {
-		result1 v1beta1h.ExtensionsV1beta1Interface
+func (fake *FakeK8sClient) EventsReturns(result1 eventsv1beta1.EventsV1beta1Interface) {
+	fake.EventsStub = nil
+	fake.eventsReturns = struct {
+		result1 eventsv1beta1.EventsV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) ExtensionsReturnsOnCall(i int, result1 v1beta1h.ExtensionsV1beta1Interface) {
-	fake.extensionsMutex.Lock()
-	defer fake.extensionsMutex.Unlock()
-	fake.ExtensionsStub = nil
-	if fake.extensionsReturnsOnCall == nil {
-		fake.extensionsReturnsOnCall = make(map[int]struct {
-			result1 v1beta1h.ExtensionsV1beta1Interface
+func (fake *FakeK8sClient) EventsReturnsOnCall(i int, result1 eventsv1beta1.EventsV1beta1Interface) {
+	fake.EventsStub = nil
+	if fake.eventsReturnsOnCall == nil {
+		fake.eventsReturnsOnCall = make(map[int]struct {
+			result1 eventsv1beta1.EventsV1beta1Interface
 		})
 	}
-	fake.extensionsReturnsOnCall[i] = struct {
-		result1 v1beta1h.ExtensionsV1beta1Interface
+	fake.eventsReturnsOnCall[i] = struct {
+		result1 eventsv1beta1.EventsV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) ExtensionsV1beta1() v1beta1h.ExtensionsV1beta1Interface {
+func (fake *FakeK8sClient) ExtensionsV1beta1() extensionsv1beta1.ExtensionsV1beta1Interface {
 	fake.extensionsV1beta1Mutex.Lock()
 	ret, specificReturn := fake.extensionsV1beta1ReturnsOnCall[len(fake.extensionsV1beta1ArgsForCall)]
-	fake.extensionsV1beta1ArgsForCall = append(fake.extensionsV1beta1ArgsForCall, struct {
-	}{})
+	fake.extensionsV1beta1ArgsForCall = append(fake.extensionsV1beta1ArgsForCall, struct{}{})
 	fake.recordInvocation("ExtensionsV1beta1", []interface{}{})
 	fake.extensionsV1beta1Mutex.Unlock()
 	if fake.ExtensionsV1beta1Stub != nil {
@@ -2284,8 +1796,7 @@ func (fake *FakeK8sClient) ExtensionsV1beta1() v1beta1h.ExtensionsV1beta1Interfa
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.extensionsV1beta1Returns
-	return fakeReturns.result1
+	return fake.extensionsV1beta1Returns.result1
 }
 
 func (fake *FakeK8sClient) ExtensionsV1beta1CallCount() int {
@@ -2294,92 +1805,69 @@ func (fake *FakeK8sClient) ExtensionsV1beta1CallCount() int {
 	return len(fake.extensionsV1beta1ArgsForCall)
 }
 
-func (fake *FakeK8sClient) ExtensionsV1beta1Calls(stub func() v1beta1h.ExtensionsV1beta1Interface) {
-	fake.extensionsV1beta1Mutex.Lock()
-	defer fake.extensionsV1beta1Mutex.Unlock()
-	fake.ExtensionsV1beta1Stub = stub
-}
-
-func (fake *FakeK8sClient) ExtensionsV1beta1Returns(result1 v1beta1h.ExtensionsV1beta1Interface) {
-	fake.extensionsV1beta1Mutex.Lock()
-	defer fake.extensionsV1beta1Mutex.Unlock()
+func (fake *FakeK8sClient) ExtensionsV1beta1Returns(result1 extensionsv1beta1.ExtensionsV1beta1Interface) {
 	fake.ExtensionsV1beta1Stub = nil
 	fake.extensionsV1beta1Returns = struct {
-		result1 v1beta1h.ExtensionsV1beta1Interface
+		result1 extensionsv1beta1.ExtensionsV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) ExtensionsV1beta1ReturnsOnCall(i int, result1 v1beta1h.ExtensionsV1beta1Interface) {
-	fake.extensionsV1beta1Mutex.Lock()
-	defer fake.extensionsV1beta1Mutex.Unlock()
+func (fake *FakeK8sClient) ExtensionsV1beta1ReturnsOnCall(i int, result1 extensionsv1beta1.ExtensionsV1beta1Interface) {
 	fake.ExtensionsV1beta1Stub = nil
 	if fake.extensionsV1beta1ReturnsOnCall == nil {
 		fake.extensionsV1beta1ReturnsOnCall = make(map[int]struct {
-			result1 v1beta1h.ExtensionsV1beta1Interface
+			result1 extensionsv1beta1.ExtensionsV1beta1Interface
 		})
 	}
 	fake.extensionsV1beta1ReturnsOnCall[i] = struct {
-		result1 v1beta1h.ExtensionsV1beta1Interface
+		result1 extensionsv1beta1.ExtensionsV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) Networking() v1f.NetworkingV1Interface {
-	fake.networkingMutex.Lock()
-	ret, specificReturn := fake.networkingReturnsOnCall[len(fake.networkingArgsForCall)]
-	fake.networkingArgsForCall = append(fake.networkingArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Networking", []interface{}{})
-	fake.networkingMutex.Unlock()
-	if fake.NetworkingStub != nil {
-		return fake.NetworkingStub()
+func (fake *FakeK8sClient) Extensions() extensionsv1beta1.ExtensionsV1beta1Interface {
+	fake.extensionsMutex.Lock()
+	ret, specificReturn := fake.extensionsReturnsOnCall[len(fake.extensionsArgsForCall)]
+	fake.extensionsArgsForCall = append(fake.extensionsArgsForCall, struct{}{})
+	fake.recordInvocation("Extensions", []interface{}{})
+	fake.extensionsMutex.Unlock()
+	if fake.ExtensionsStub != nil {
+		return fake.ExtensionsStub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.networkingReturns
-	return fakeReturns.result1
+	return fake.extensionsReturns.result1
 }
 
-func (fake *FakeK8sClient) NetworkingCallCount() int {
-	fake.networkingMutex.RLock()
-	defer fake.networkingMutex.RUnlock()
-	return len(fake.networkingArgsForCall)
+func (fake *FakeK8sClient) ExtensionsCallCount() int {
+	fake.extensionsMutex.RLock()
+	defer fake.extensionsMutex.RUnlock()
+	return len(fake.extensionsArgsForCall)
 }
 
-func (fake *FakeK8sClient) NetworkingCalls(stub func() v1f.NetworkingV1Interface) {
-	fake.networkingMutex.Lock()
-	defer fake.networkingMutex.Unlock()
-	fake.NetworkingStub = stub
-}
-
-func (fake *FakeK8sClient) NetworkingReturns(result1 v1f.NetworkingV1Interface) {
-	fake.networkingMutex.Lock()
-	defer fake.networkingMutex.Unlock()
-	fake.NetworkingStub = nil
-	fake.networkingReturns = struct {
-		result1 v1f.NetworkingV1Interface
+func (fake *FakeK8sClient) ExtensionsReturns(result1 extensionsv1beta1.ExtensionsV1beta1Interface) {
+	fake.ExtensionsStub = nil
+	fake.extensionsReturns = struct {
+		result1 extensionsv1beta1.ExtensionsV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) NetworkingReturnsOnCall(i int, result1 v1f.NetworkingV1Interface) {
-	fake.networkingMutex.Lock()
-	defer fake.networkingMutex.Unlock()
-	fake.NetworkingStub = nil
-	if fake.networkingReturnsOnCall == nil {
-		fake.networkingReturnsOnCall = make(map[int]struct {
-			result1 v1f.NetworkingV1Interface
+func (fake *FakeK8sClient) ExtensionsReturnsOnCall(i int, result1 extensionsv1beta1.ExtensionsV1beta1Interface) {
+	fake.ExtensionsStub = nil
+	if fake.extensionsReturnsOnCall == nil {
+		fake.extensionsReturnsOnCall = make(map[int]struct {
+			result1 extensionsv1beta1.ExtensionsV1beta1Interface
 		})
 	}
-	fake.networkingReturnsOnCall[i] = struct {
-		result1 v1f.NetworkingV1Interface
+	fake.extensionsReturnsOnCall[i] = struct {
+		result1 extensionsv1beta1.ExtensionsV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) NetworkingV1() v1f.NetworkingV1Interface {
+func (fake *FakeK8sClient) NetworkingV1() networkingv1.NetworkingV1Interface {
 	fake.networkingV1Mutex.Lock()
 	ret, specificReturn := fake.networkingV1ReturnsOnCall[len(fake.networkingV1ArgsForCall)]
-	fake.networkingV1ArgsForCall = append(fake.networkingV1ArgsForCall, struct {
-	}{})
+	fake.networkingV1ArgsForCall = append(fake.networkingV1ArgsForCall, struct{}{})
 	fake.recordInvocation("NetworkingV1", []interface{}{})
 	fake.networkingV1Mutex.Unlock()
 	if fake.NetworkingV1Stub != nil {
@@ -2388,8 +1876,7 @@ func (fake *FakeK8sClient) NetworkingV1() v1f.NetworkingV1Interface {
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.networkingV1Returns
-	return fakeReturns.result1
+	return fake.networkingV1Returns.result1
 }
 
 func (fake *FakeK8sClient) NetworkingV1CallCount() int {
@@ -2398,92 +1885,69 @@ func (fake *FakeK8sClient) NetworkingV1CallCount() int {
 	return len(fake.networkingV1ArgsForCall)
 }
 
-func (fake *FakeK8sClient) NetworkingV1Calls(stub func() v1f.NetworkingV1Interface) {
-	fake.networkingV1Mutex.Lock()
-	defer fake.networkingV1Mutex.Unlock()
-	fake.NetworkingV1Stub = stub
-}
-
-func (fake *FakeK8sClient) NetworkingV1Returns(result1 v1f.NetworkingV1Interface) {
-	fake.networkingV1Mutex.Lock()
-	defer fake.networkingV1Mutex.Unlock()
+func (fake *FakeK8sClient) NetworkingV1Returns(result1 networkingv1.NetworkingV1Interface) {
 	fake.NetworkingV1Stub = nil
 	fake.networkingV1Returns = struct {
-		result1 v1f.NetworkingV1Interface
+		result1 networkingv1.NetworkingV1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) NetworkingV1ReturnsOnCall(i int, result1 v1f.NetworkingV1Interface) {
-	fake.networkingV1Mutex.Lock()
-	defer fake.networkingV1Mutex.Unlock()
+func (fake *FakeK8sClient) NetworkingV1ReturnsOnCall(i int, result1 networkingv1.NetworkingV1Interface) {
 	fake.NetworkingV1Stub = nil
 	if fake.networkingV1ReturnsOnCall == nil {
 		fake.networkingV1ReturnsOnCall = make(map[int]struct {
-			result1 v1f.NetworkingV1Interface
+			result1 networkingv1.NetworkingV1Interface
 		})
 	}
 	fake.networkingV1ReturnsOnCall[i] = struct {
-		result1 v1f.NetworkingV1Interface
+		result1 networkingv1.NetworkingV1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) Policy() v1beta1i.PolicyV1beta1Interface {
-	fake.policyMutex.Lock()
-	ret, specificReturn := fake.policyReturnsOnCall[len(fake.policyArgsForCall)]
-	fake.policyArgsForCall = append(fake.policyArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Policy", []interface{}{})
-	fake.policyMutex.Unlock()
-	if fake.PolicyStub != nil {
-		return fake.PolicyStub()
+func (fake *FakeK8sClient) Networking() networkingv1.NetworkingV1Interface {
+	fake.networkingMutex.Lock()
+	ret, specificReturn := fake.networkingReturnsOnCall[len(fake.networkingArgsForCall)]
+	fake.networkingArgsForCall = append(fake.networkingArgsForCall, struct{}{})
+	fake.recordInvocation("Networking", []interface{}{})
+	fake.networkingMutex.Unlock()
+	if fake.NetworkingStub != nil {
+		return fake.NetworkingStub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.policyReturns
-	return fakeReturns.result1
+	return fake.networkingReturns.result1
 }
 
-func (fake *FakeK8sClient) PolicyCallCount() int {
-	fake.policyMutex.RLock()
-	defer fake.policyMutex.RUnlock()
-	return len(fake.policyArgsForCall)
+func (fake *FakeK8sClient) NetworkingCallCount() int {
+	fake.networkingMutex.RLock()
+	defer fake.networkingMutex.RUnlock()
+	return len(fake.networkingArgsForCall)
 }
 
-func (fake *FakeK8sClient) PolicyCalls(stub func() v1beta1i.PolicyV1beta1Interface) {
-	fake.policyMutex.Lock()
-	defer fake.policyMutex.Unlock()
-	fake.PolicyStub = stub
-}
-
-func (fake *FakeK8sClient) PolicyReturns(result1 v1beta1i.PolicyV1beta1Interface) {
-	fake.policyMutex.Lock()
-	defer fake.policyMutex.Unlock()
-	fake.PolicyStub = nil
-	fake.policyReturns = struct {
-		result1 v1beta1i.PolicyV1beta1Interface
+func (fake *FakeK8sClient) NetworkingReturns(result1 networkingv1.NetworkingV1Interface) {
+	fake.NetworkingStub = nil
+	fake.networkingReturns = struct {
+		result1 networkingv1.NetworkingV1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) PolicyReturnsOnCall(i int, result1 v1beta1i.PolicyV1beta1Interface) {
-	fake.policyMutex.Lock()
-	defer fake.policyMutex.Unlock()
-	fake.PolicyStub = nil
-	if fake.policyReturnsOnCall == nil {
-		fake.policyReturnsOnCall = make(map[int]struct {
-			result1 v1beta1i.PolicyV1beta1Interface
+func (fake *FakeK8sClient) NetworkingReturnsOnCall(i int, result1 networkingv1.NetworkingV1Interface) {
+	fake.NetworkingStub = nil
+	if fake.networkingReturnsOnCall == nil {
+		fake.networkingReturnsOnCall = make(map[int]struct {
+			result1 networkingv1.NetworkingV1Interface
 		})
 	}
-	fake.policyReturnsOnCall[i] = struct {
-		result1 v1beta1i.PolicyV1beta1Interface
+	fake.networkingReturnsOnCall[i] = struct {
+		result1 networkingv1.NetworkingV1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) PolicyV1beta1() v1beta1i.PolicyV1beta1Interface {
+func (fake *FakeK8sClient) PolicyV1beta1() policyv1beta1.PolicyV1beta1Interface {
 	fake.policyV1beta1Mutex.Lock()
 	ret, specificReturn := fake.policyV1beta1ReturnsOnCall[len(fake.policyV1beta1ArgsForCall)]
-	fake.policyV1beta1ArgsForCall = append(fake.policyV1beta1ArgsForCall, struct {
-	}{})
+	fake.policyV1beta1ArgsForCall = append(fake.policyV1beta1ArgsForCall, struct{}{})
 	fake.recordInvocation("PolicyV1beta1", []interface{}{})
 	fake.policyV1beta1Mutex.Unlock()
 	if fake.PolicyV1beta1Stub != nil {
@@ -2492,8 +1956,7 @@ func (fake *FakeK8sClient) PolicyV1beta1() v1beta1i.PolicyV1beta1Interface {
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.policyV1beta1Returns
-	return fakeReturns.result1
+	return fake.policyV1beta1Returns.result1
 }
 
 func (fake *FakeK8sClient) PolicyV1beta1CallCount() int {
@@ -2502,92 +1965,69 @@ func (fake *FakeK8sClient) PolicyV1beta1CallCount() int {
 	return len(fake.policyV1beta1ArgsForCall)
 }
 
-func (fake *FakeK8sClient) PolicyV1beta1Calls(stub func() v1beta1i.PolicyV1beta1Interface) {
-	fake.policyV1beta1Mutex.Lock()
-	defer fake.policyV1beta1Mutex.Unlock()
-	fake.PolicyV1beta1Stub = stub
-}
-
-func (fake *FakeK8sClient) PolicyV1beta1Returns(result1 v1beta1i.PolicyV1beta1Interface) {
-	fake.policyV1beta1Mutex.Lock()
-	defer fake.policyV1beta1Mutex.Unlock()
+func (fake *FakeK8sClient) PolicyV1beta1Returns(result1 policyv1beta1.PolicyV1beta1Interface) {
 	fake.PolicyV1beta1Stub = nil
 	fake.policyV1beta1Returns = struct {
-		result1 v1beta1i.PolicyV1beta1Interface
+		result1 policyv1beta1.PolicyV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) PolicyV1beta1ReturnsOnCall(i int, result1 v1beta1i.PolicyV1beta1Interface) {
-	fake.policyV1beta1Mutex.Lock()
-	defer fake.policyV1beta1Mutex.Unlock()
+func (fake *FakeK8sClient) PolicyV1beta1ReturnsOnCall(i int, result1 policyv1beta1.PolicyV1beta1Interface) {
 	fake.PolicyV1beta1Stub = nil
 	if fake.policyV1beta1ReturnsOnCall == nil {
 		fake.policyV1beta1ReturnsOnCall = make(map[int]struct {
-			result1 v1beta1i.PolicyV1beta1Interface
+			result1 policyv1beta1.PolicyV1beta1Interface
 		})
 	}
 	fake.policyV1beta1ReturnsOnCall[i] = struct {
-		result1 v1beta1i.PolicyV1beta1Interface
+		result1 policyv1beta1.PolicyV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) Rbac() v1g.RbacV1Interface {
-	fake.rbacMutex.Lock()
-	ret, specificReturn := fake.rbacReturnsOnCall[len(fake.rbacArgsForCall)]
-	fake.rbacArgsForCall = append(fake.rbacArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Rbac", []interface{}{})
-	fake.rbacMutex.Unlock()
-	if fake.RbacStub != nil {
-		return fake.RbacStub()
+func (fake *FakeK8sClient) Policy() policyv1beta1.PolicyV1beta1Interface {
+	fake.policyMutex.Lock()
+	ret, specificReturn := fake.policyReturnsOnCall[len(fake.policyArgsForCall)]
+	fake.policyArgsForCall = append(fake.policyArgsForCall, struct{}{})
+	fake.recordInvocation("Policy", []interface{}{})
+	fake.policyMutex.Unlock()
+	if fake.PolicyStub != nil {
+		return fake.PolicyStub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.rbacReturns
-	return fakeReturns.result1
+	return fake.policyReturns.result1
 }
 
-func (fake *FakeK8sClient) RbacCallCount() int {
-	fake.rbacMutex.RLock()
-	defer fake.rbacMutex.RUnlock()
-	return len(fake.rbacArgsForCall)
+func (fake *FakeK8sClient) PolicyCallCount() int {
+	fake.policyMutex.RLock()
+	defer fake.policyMutex.RUnlock()
+	return len(fake.policyArgsForCall)
 }
 
-func (fake *FakeK8sClient) RbacCalls(stub func() v1g.RbacV1Interface) {
-	fake.rbacMutex.Lock()
-	defer fake.rbacMutex.Unlock()
-	fake.RbacStub = stub
-}
-
-func (fake *FakeK8sClient) RbacReturns(result1 v1g.RbacV1Interface) {
-	fake.rbacMutex.Lock()
-	defer fake.rbacMutex.Unlock()
-	fake.RbacStub = nil
-	fake.rbacReturns = struct {
-		result1 v1g.RbacV1Interface
+func (fake *FakeK8sClient) PolicyReturns(result1 policyv1beta1.PolicyV1beta1Interface) {
+	fake.PolicyStub = nil
+	fake.policyReturns = struct {
+		result1 policyv1beta1.PolicyV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) RbacReturnsOnCall(i int, result1 v1g.RbacV1Interface) {
-	fake.rbacMutex.Lock()
-	defer fake.rbacMutex.Unlock()
-	fake.RbacStub = nil
-	if fake.rbacReturnsOnCall == nil {
-		fake.rbacReturnsOnCall = make(map[int]struct {
-			result1 v1g.RbacV1Interface
+func (fake *FakeK8sClient) PolicyReturnsOnCall(i int, result1 policyv1beta1.PolicyV1beta1Interface) {
+	fake.PolicyStub = nil
+	if fake.policyReturnsOnCall == nil {
+		fake.policyReturnsOnCall = make(map[int]struct {
+			result1 policyv1beta1.PolicyV1beta1Interface
 		})
 	}
-	fake.rbacReturnsOnCall[i] = struct {
-		result1 v1g.RbacV1Interface
+	fake.policyReturnsOnCall[i] = struct {
+		result1 policyv1beta1.PolicyV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) RbacV1() v1g.RbacV1Interface {
+func (fake *FakeK8sClient) RbacV1() rbacv1.RbacV1Interface {
 	fake.rbacV1Mutex.Lock()
 	ret, specificReturn := fake.rbacV1ReturnsOnCall[len(fake.rbacV1ArgsForCall)]
-	fake.rbacV1ArgsForCall = append(fake.rbacV1ArgsForCall, struct {
-	}{})
+	fake.rbacV1ArgsForCall = append(fake.rbacV1ArgsForCall, struct{}{})
 	fake.recordInvocation("RbacV1", []interface{}{})
 	fake.rbacV1Mutex.Unlock()
 	if fake.RbacV1Stub != nil {
@@ -2596,8 +2036,7 @@ func (fake *FakeK8sClient) RbacV1() v1g.RbacV1Interface {
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.rbacV1Returns
-	return fakeReturns.result1
+	return fake.rbacV1Returns.result1
 }
 
 func (fake *FakeK8sClient) RbacV1CallCount() int {
@@ -2606,92 +2045,69 @@ func (fake *FakeK8sClient) RbacV1CallCount() int {
 	return len(fake.rbacV1ArgsForCall)
 }
 
-func (fake *FakeK8sClient) RbacV1Calls(stub func() v1g.RbacV1Interface) {
-	fake.rbacV1Mutex.Lock()
-	defer fake.rbacV1Mutex.Unlock()
-	fake.RbacV1Stub = stub
-}
-
-func (fake *FakeK8sClient) RbacV1Returns(result1 v1g.RbacV1Interface) {
-	fake.rbacV1Mutex.Lock()
-	defer fake.rbacV1Mutex.Unlock()
+func (fake *FakeK8sClient) RbacV1Returns(result1 rbacv1.RbacV1Interface) {
 	fake.RbacV1Stub = nil
 	fake.rbacV1Returns = struct {
-		result1 v1g.RbacV1Interface
+		result1 rbacv1.RbacV1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) RbacV1ReturnsOnCall(i int, result1 v1g.RbacV1Interface) {
-	fake.rbacV1Mutex.Lock()
-	defer fake.rbacV1Mutex.Unlock()
+func (fake *FakeK8sClient) RbacV1ReturnsOnCall(i int, result1 rbacv1.RbacV1Interface) {
 	fake.RbacV1Stub = nil
 	if fake.rbacV1ReturnsOnCall == nil {
 		fake.rbacV1ReturnsOnCall = make(map[int]struct {
-			result1 v1g.RbacV1Interface
+			result1 rbacv1.RbacV1Interface
 		})
 	}
 	fake.rbacV1ReturnsOnCall[i] = struct {
-		result1 v1g.RbacV1Interface
+		result1 rbacv1.RbacV1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) RbacV1alpha1() v1alpha1b.RbacV1alpha1Interface {
-	fake.rbacV1alpha1Mutex.Lock()
-	ret, specificReturn := fake.rbacV1alpha1ReturnsOnCall[len(fake.rbacV1alpha1ArgsForCall)]
-	fake.rbacV1alpha1ArgsForCall = append(fake.rbacV1alpha1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("RbacV1alpha1", []interface{}{})
-	fake.rbacV1alpha1Mutex.Unlock()
-	if fake.RbacV1alpha1Stub != nil {
-		return fake.RbacV1alpha1Stub()
+func (fake *FakeK8sClient) Rbac() rbacv1.RbacV1Interface {
+	fake.rbacMutex.Lock()
+	ret, specificReturn := fake.rbacReturnsOnCall[len(fake.rbacArgsForCall)]
+	fake.rbacArgsForCall = append(fake.rbacArgsForCall, struct{}{})
+	fake.recordInvocation("Rbac", []interface{}{})
+	fake.rbacMutex.Unlock()
+	if fake.RbacStub != nil {
+		return fake.RbacStub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.rbacV1alpha1Returns
-	return fakeReturns.result1
+	return fake.rbacReturns.result1
 }
 
-func (fake *FakeK8sClient) RbacV1alpha1CallCount() int {
-	fake.rbacV1alpha1Mutex.RLock()
-	defer fake.rbacV1alpha1Mutex.RUnlock()
-	return len(fake.rbacV1alpha1ArgsForCall)
+func (fake *FakeK8sClient) RbacCallCount() int {
+	fake.rbacMutex.RLock()
+	defer fake.rbacMutex.RUnlock()
+	return len(fake.rbacArgsForCall)
 }
 
-func (fake *FakeK8sClient) RbacV1alpha1Calls(stub func() v1alpha1b.RbacV1alpha1Interface) {
-	fake.rbacV1alpha1Mutex.Lock()
-	defer fake.rbacV1alpha1Mutex.Unlock()
-	fake.RbacV1alpha1Stub = stub
-}
-
-func (fake *FakeK8sClient) RbacV1alpha1Returns(result1 v1alpha1b.RbacV1alpha1Interface) {
-	fake.rbacV1alpha1Mutex.Lock()
-	defer fake.rbacV1alpha1Mutex.Unlock()
-	fake.RbacV1alpha1Stub = nil
-	fake.rbacV1alpha1Returns = struct {
-		result1 v1alpha1b.RbacV1alpha1Interface
+func (fake *FakeK8sClient) RbacReturns(result1 rbacv1.RbacV1Interface) {
+	fake.RbacStub = nil
+	fake.rbacReturns = struct {
+		result1 rbacv1.RbacV1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) RbacV1alpha1ReturnsOnCall(i int, result1 v1alpha1b.RbacV1alpha1Interface) {
-	fake.rbacV1alpha1Mutex.Lock()
-	defer fake.rbacV1alpha1Mutex.Unlock()
-	fake.RbacV1alpha1Stub = nil
-	if fake.rbacV1alpha1ReturnsOnCall == nil {
-		fake.rbacV1alpha1ReturnsOnCall = make(map[int]struct {
-			result1 v1alpha1b.RbacV1alpha1Interface
+func (fake *FakeK8sClient) RbacReturnsOnCall(i int, result1 rbacv1.RbacV1Interface) {
+	fake.RbacStub = nil
+	if fake.rbacReturnsOnCall == nil {
+		fake.rbacReturnsOnCall = make(map[int]struct {
+			result1 rbacv1.RbacV1Interface
 		})
 	}
-	fake.rbacV1alpha1ReturnsOnCall[i] = struct {
-		result1 v1alpha1b.RbacV1alpha1Interface
+	fake.rbacReturnsOnCall[i] = struct {
+		result1 rbacv1.RbacV1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) RbacV1beta1() v1beta1j.RbacV1beta1Interface {
+func (fake *FakeK8sClient) RbacV1beta1() rbacv1beta1.RbacV1beta1Interface {
 	fake.rbacV1beta1Mutex.Lock()
 	ret, specificReturn := fake.rbacV1beta1ReturnsOnCall[len(fake.rbacV1beta1ArgsForCall)]
-	fake.rbacV1beta1ArgsForCall = append(fake.rbacV1beta1ArgsForCall, struct {
-	}{})
+	fake.rbacV1beta1ArgsForCall = append(fake.rbacV1beta1ArgsForCall, struct{}{})
 	fake.recordInvocation("RbacV1beta1", []interface{}{})
 	fake.rbacV1beta1Mutex.Unlock()
 	if fake.RbacV1beta1Stub != nil {
@@ -2700,8 +2116,7 @@ func (fake *FakeK8sClient) RbacV1beta1() v1beta1j.RbacV1beta1Interface {
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.rbacV1beta1Returns
-	return fakeReturns.result1
+	return fake.rbacV1beta1Returns.result1
 }
 
 func (fake *FakeK8sClient) RbacV1beta1CallCount() int {
@@ -2710,92 +2125,69 @@ func (fake *FakeK8sClient) RbacV1beta1CallCount() int {
 	return len(fake.rbacV1beta1ArgsForCall)
 }
 
-func (fake *FakeK8sClient) RbacV1beta1Calls(stub func() v1beta1j.RbacV1beta1Interface) {
-	fake.rbacV1beta1Mutex.Lock()
-	defer fake.rbacV1beta1Mutex.Unlock()
-	fake.RbacV1beta1Stub = stub
-}
-
-func (fake *FakeK8sClient) RbacV1beta1Returns(result1 v1beta1j.RbacV1beta1Interface) {
-	fake.rbacV1beta1Mutex.Lock()
-	defer fake.rbacV1beta1Mutex.Unlock()
+func (fake *FakeK8sClient) RbacV1beta1Returns(result1 rbacv1beta1.RbacV1beta1Interface) {
 	fake.RbacV1beta1Stub = nil
 	fake.rbacV1beta1Returns = struct {
-		result1 v1beta1j.RbacV1beta1Interface
+		result1 rbacv1beta1.RbacV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) RbacV1beta1ReturnsOnCall(i int, result1 v1beta1j.RbacV1beta1Interface) {
-	fake.rbacV1beta1Mutex.Lock()
-	defer fake.rbacV1beta1Mutex.Unlock()
+func (fake *FakeK8sClient) RbacV1beta1ReturnsOnCall(i int, result1 rbacv1beta1.RbacV1beta1Interface) {
 	fake.RbacV1beta1Stub = nil
 	if fake.rbacV1beta1ReturnsOnCall == nil {
 		fake.rbacV1beta1ReturnsOnCall = make(map[int]struct {
-			result1 v1beta1j.RbacV1beta1Interface
+			result1 rbacv1beta1.RbacV1beta1Interface
 		})
 	}
 	fake.rbacV1beta1ReturnsOnCall[i] = struct {
-		result1 v1beta1j.RbacV1beta1Interface
+		result1 rbacv1beta1.RbacV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) Scheduling() v1beta1k.SchedulingV1beta1Interface {
-	fake.schedulingMutex.Lock()
-	ret, specificReturn := fake.schedulingReturnsOnCall[len(fake.schedulingArgsForCall)]
-	fake.schedulingArgsForCall = append(fake.schedulingArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Scheduling", []interface{}{})
-	fake.schedulingMutex.Unlock()
-	if fake.SchedulingStub != nil {
-		return fake.SchedulingStub()
+func (fake *FakeK8sClient) RbacV1alpha1() rbacv1alpha1.RbacV1alpha1Interface {
+	fake.rbacV1alpha1Mutex.Lock()
+	ret, specificReturn := fake.rbacV1alpha1ReturnsOnCall[len(fake.rbacV1alpha1ArgsForCall)]
+	fake.rbacV1alpha1ArgsForCall = append(fake.rbacV1alpha1ArgsForCall, struct{}{})
+	fake.recordInvocation("RbacV1alpha1", []interface{}{})
+	fake.rbacV1alpha1Mutex.Unlock()
+	if fake.RbacV1alpha1Stub != nil {
+		return fake.RbacV1alpha1Stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.schedulingReturns
-	return fakeReturns.result1
+	return fake.rbacV1alpha1Returns.result1
 }
 
-func (fake *FakeK8sClient) SchedulingCallCount() int {
-	fake.schedulingMutex.RLock()
-	defer fake.schedulingMutex.RUnlock()
-	return len(fake.schedulingArgsForCall)
+func (fake *FakeK8sClient) RbacV1alpha1CallCount() int {
+	fake.rbacV1alpha1Mutex.RLock()
+	defer fake.rbacV1alpha1Mutex.RUnlock()
+	return len(fake.rbacV1alpha1ArgsForCall)
 }
 
-func (fake *FakeK8sClient) SchedulingCalls(stub func() v1beta1k.SchedulingV1beta1Interface) {
-	fake.schedulingMutex.Lock()
-	defer fake.schedulingMutex.Unlock()
-	fake.SchedulingStub = stub
-}
-
-func (fake *FakeK8sClient) SchedulingReturns(result1 v1beta1k.SchedulingV1beta1Interface) {
-	fake.schedulingMutex.Lock()
-	defer fake.schedulingMutex.Unlock()
-	fake.SchedulingStub = nil
-	fake.schedulingReturns = struct {
-		result1 v1beta1k.SchedulingV1beta1Interface
+func (fake *FakeK8sClient) RbacV1alpha1Returns(result1 rbacv1alpha1.RbacV1alpha1Interface) {
+	fake.RbacV1alpha1Stub = nil
+	fake.rbacV1alpha1Returns = struct {
+		result1 rbacv1alpha1.RbacV1alpha1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) SchedulingReturnsOnCall(i int, result1 v1beta1k.SchedulingV1beta1Interface) {
-	fake.schedulingMutex.Lock()
-	defer fake.schedulingMutex.Unlock()
-	fake.SchedulingStub = nil
-	if fake.schedulingReturnsOnCall == nil {
-		fake.schedulingReturnsOnCall = make(map[int]struct {
-			result1 v1beta1k.SchedulingV1beta1Interface
+func (fake *FakeK8sClient) RbacV1alpha1ReturnsOnCall(i int, result1 rbacv1alpha1.RbacV1alpha1Interface) {
+	fake.RbacV1alpha1Stub = nil
+	if fake.rbacV1alpha1ReturnsOnCall == nil {
+		fake.rbacV1alpha1ReturnsOnCall = make(map[int]struct {
+			result1 rbacv1alpha1.RbacV1alpha1Interface
 		})
 	}
-	fake.schedulingReturnsOnCall[i] = struct {
-		result1 v1beta1k.SchedulingV1beta1Interface
+	fake.rbacV1alpha1ReturnsOnCall[i] = struct {
+		result1 rbacv1alpha1.RbacV1alpha1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) SchedulingV1alpha1() v1alpha1c.SchedulingV1alpha1Interface {
+func (fake *FakeK8sClient) SchedulingV1alpha1() schedulingv1alpha1.SchedulingV1alpha1Interface {
 	fake.schedulingV1alpha1Mutex.Lock()
 	ret, specificReturn := fake.schedulingV1alpha1ReturnsOnCall[len(fake.schedulingV1alpha1ArgsForCall)]
-	fake.schedulingV1alpha1ArgsForCall = append(fake.schedulingV1alpha1ArgsForCall, struct {
-	}{})
+	fake.schedulingV1alpha1ArgsForCall = append(fake.schedulingV1alpha1ArgsForCall, struct{}{})
 	fake.recordInvocation("SchedulingV1alpha1", []interface{}{})
 	fake.schedulingV1alpha1Mutex.Unlock()
 	if fake.SchedulingV1alpha1Stub != nil {
@@ -2804,8 +2196,7 @@ func (fake *FakeK8sClient) SchedulingV1alpha1() v1alpha1c.SchedulingV1alpha1Inte
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.schedulingV1alpha1Returns
-	return fakeReturns.result1
+	return fake.schedulingV1alpha1Returns.result1
 }
 
 func (fake *FakeK8sClient) SchedulingV1alpha1CallCount() int {
@@ -2814,40 +2205,29 @@ func (fake *FakeK8sClient) SchedulingV1alpha1CallCount() int {
 	return len(fake.schedulingV1alpha1ArgsForCall)
 }
 
-func (fake *FakeK8sClient) SchedulingV1alpha1Calls(stub func() v1alpha1c.SchedulingV1alpha1Interface) {
-	fake.schedulingV1alpha1Mutex.Lock()
-	defer fake.schedulingV1alpha1Mutex.Unlock()
-	fake.SchedulingV1alpha1Stub = stub
-}
-
-func (fake *FakeK8sClient) SchedulingV1alpha1Returns(result1 v1alpha1c.SchedulingV1alpha1Interface) {
-	fake.schedulingV1alpha1Mutex.Lock()
-	defer fake.schedulingV1alpha1Mutex.Unlock()
+func (fake *FakeK8sClient) SchedulingV1alpha1Returns(result1 schedulingv1alpha1.SchedulingV1alpha1Interface) {
 	fake.SchedulingV1alpha1Stub = nil
 	fake.schedulingV1alpha1Returns = struct {
-		result1 v1alpha1c.SchedulingV1alpha1Interface
+		result1 schedulingv1alpha1.SchedulingV1alpha1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) SchedulingV1alpha1ReturnsOnCall(i int, result1 v1alpha1c.SchedulingV1alpha1Interface) {
-	fake.schedulingV1alpha1Mutex.Lock()
-	defer fake.schedulingV1alpha1Mutex.Unlock()
+func (fake *FakeK8sClient) SchedulingV1alpha1ReturnsOnCall(i int, result1 schedulingv1alpha1.SchedulingV1alpha1Interface) {
 	fake.SchedulingV1alpha1Stub = nil
 	if fake.schedulingV1alpha1ReturnsOnCall == nil {
 		fake.schedulingV1alpha1ReturnsOnCall = make(map[int]struct {
-			result1 v1alpha1c.SchedulingV1alpha1Interface
+			result1 schedulingv1alpha1.SchedulingV1alpha1Interface
 		})
 	}
 	fake.schedulingV1alpha1ReturnsOnCall[i] = struct {
-		result1 v1alpha1c.SchedulingV1alpha1Interface
+		result1 schedulingv1alpha1.SchedulingV1alpha1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) SchedulingV1beta1() v1beta1k.SchedulingV1beta1Interface {
+func (fake *FakeK8sClient) SchedulingV1beta1() schedulingv1beta1.SchedulingV1beta1Interface {
 	fake.schedulingV1beta1Mutex.Lock()
 	ret, specificReturn := fake.schedulingV1beta1ReturnsOnCall[len(fake.schedulingV1beta1ArgsForCall)]
-	fake.schedulingV1beta1ArgsForCall = append(fake.schedulingV1beta1ArgsForCall, struct {
-	}{})
+	fake.schedulingV1beta1ArgsForCall = append(fake.schedulingV1beta1ArgsForCall, struct{}{})
 	fake.recordInvocation("SchedulingV1beta1", []interface{}{})
 	fake.schedulingV1beta1Mutex.Unlock()
 	if fake.SchedulingV1beta1Stub != nil {
@@ -2856,8 +2236,7 @@ func (fake *FakeK8sClient) SchedulingV1beta1() v1beta1k.SchedulingV1beta1Interfa
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.schedulingV1beta1Returns
-	return fakeReturns.result1
+	return fake.schedulingV1beta1Returns.result1
 }
 
 func (fake *FakeK8sClient) SchedulingV1beta1CallCount() int {
@@ -2866,92 +2245,69 @@ func (fake *FakeK8sClient) SchedulingV1beta1CallCount() int {
 	return len(fake.schedulingV1beta1ArgsForCall)
 }
 
-func (fake *FakeK8sClient) SchedulingV1beta1Calls(stub func() v1beta1k.SchedulingV1beta1Interface) {
-	fake.schedulingV1beta1Mutex.Lock()
-	defer fake.schedulingV1beta1Mutex.Unlock()
-	fake.SchedulingV1beta1Stub = stub
-}
-
-func (fake *FakeK8sClient) SchedulingV1beta1Returns(result1 v1beta1k.SchedulingV1beta1Interface) {
-	fake.schedulingV1beta1Mutex.Lock()
-	defer fake.schedulingV1beta1Mutex.Unlock()
+func (fake *FakeK8sClient) SchedulingV1beta1Returns(result1 schedulingv1beta1.SchedulingV1beta1Interface) {
 	fake.SchedulingV1beta1Stub = nil
 	fake.schedulingV1beta1Returns = struct {
-		result1 v1beta1k.SchedulingV1beta1Interface
+		result1 schedulingv1beta1.SchedulingV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) SchedulingV1beta1ReturnsOnCall(i int, result1 v1beta1k.SchedulingV1beta1Interface) {
-	fake.schedulingV1beta1Mutex.Lock()
-	defer fake.schedulingV1beta1Mutex.Unlock()
+func (fake *FakeK8sClient) SchedulingV1beta1ReturnsOnCall(i int, result1 schedulingv1beta1.SchedulingV1beta1Interface) {
 	fake.SchedulingV1beta1Stub = nil
 	if fake.schedulingV1beta1ReturnsOnCall == nil {
 		fake.schedulingV1beta1ReturnsOnCall = make(map[int]struct {
-			result1 v1beta1k.SchedulingV1beta1Interface
+			result1 schedulingv1beta1.SchedulingV1beta1Interface
 		})
 	}
 	fake.schedulingV1beta1ReturnsOnCall[i] = struct {
-		result1 v1beta1k.SchedulingV1beta1Interface
+		result1 schedulingv1beta1.SchedulingV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) Settings() v1alpha1d.SettingsV1alpha1Interface {
-	fake.settingsMutex.Lock()
-	ret, specificReturn := fake.settingsReturnsOnCall[len(fake.settingsArgsForCall)]
-	fake.settingsArgsForCall = append(fake.settingsArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Settings", []interface{}{})
-	fake.settingsMutex.Unlock()
-	if fake.SettingsStub != nil {
-		return fake.SettingsStub()
+func (fake *FakeK8sClient) Scheduling() schedulingv1beta1.SchedulingV1beta1Interface {
+	fake.schedulingMutex.Lock()
+	ret, specificReturn := fake.schedulingReturnsOnCall[len(fake.schedulingArgsForCall)]
+	fake.schedulingArgsForCall = append(fake.schedulingArgsForCall, struct{}{})
+	fake.recordInvocation("Scheduling", []interface{}{})
+	fake.schedulingMutex.Unlock()
+	if fake.SchedulingStub != nil {
+		return fake.SchedulingStub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.settingsReturns
-	return fakeReturns.result1
+	return fake.schedulingReturns.result1
 }
 
-func (fake *FakeK8sClient) SettingsCallCount() int {
-	fake.settingsMutex.RLock()
-	defer fake.settingsMutex.RUnlock()
-	return len(fake.settingsArgsForCall)
+func (fake *FakeK8sClient) SchedulingCallCount() int {
+	fake.schedulingMutex.RLock()
+	defer fake.schedulingMutex.RUnlock()
+	return len(fake.schedulingArgsForCall)
 }
 
-func (fake *FakeK8sClient) SettingsCalls(stub func() v1alpha1d.SettingsV1alpha1Interface) {
-	fake.settingsMutex.Lock()
-	defer fake.settingsMutex.Unlock()
-	fake.SettingsStub = stub
-}
-
-func (fake *FakeK8sClient) SettingsReturns(result1 v1alpha1d.SettingsV1alpha1Interface) {
-	fake.settingsMutex.Lock()
-	defer fake.settingsMutex.Unlock()
-	fake.SettingsStub = nil
-	fake.settingsReturns = struct {
-		result1 v1alpha1d.SettingsV1alpha1Interface
+func (fake *FakeK8sClient) SchedulingReturns(result1 schedulingv1beta1.SchedulingV1beta1Interface) {
+	fake.SchedulingStub = nil
+	fake.schedulingReturns = struct {
+		result1 schedulingv1beta1.SchedulingV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) SettingsReturnsOnCall(i int, result1 v1alpha1d.SettingsV1alpha1Interface) {
-	fake.settingsMutex.Lock()
-	defer fake.settingsMutex.Unlock()
-	fake.SettingsStub = nil
-	if fake.settingsReturnsOnCall == nil {
-		fake.settingsReturnsOnCall = make(map[int]struct {
-			result1 v1alpha1d.SettingsV1alpha1Interface
+func (fake *FakeK8sClient) SchedulingReturnsOnCall(i int, result1 schedulingv1beta1.SchedulingV1beta1Interface) {
+	fake.SchedulingStub = nil
+	if fake.schedulingReturnsOnCall == nil {
+		fake.schedulingReturnsOnCall = make(map[int]struct {
+			result1 schedulingv1beta1.SchedulingV1beta1Interface
 		})
 	}
-	fake.settingsReturnsOnCall[i] = struct {
-		result1 v1alpha1d.SettingsV1alpha1Interface
+	fake.schedulingReturnsOnCall[i] = struct {
+		result1 schedulingv1beta1.SchedulingV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) SettingsV1alpha1() v1alpha1d.SettingsV1alpha1Interface {
+func (fake *FakeK8sClient) SettingsV1alpha1() settingsv1alpha1.SettingsV1alpha1Interface {
 	fake.settingsV1alpha1Mutex.Lock()
 	ret, specificReturn := fake.settingsV1alpha1ReturnsOnCall[len(fake.settingsV1alpha1ArgsForCall)]
-	fake.settingsV1alpha1ArgsForCall = append(fake.settingsV1alpha1ArgsForCall, struct {
-	}{})
+	fake.settingsV1alpha1ArgsForCall = append(fake.settingsV1alpha1ArgsForCall, struct{}{})
 	fake.recordInvocation("SettingsV1alpha1", []interface{}{})
 	fake.settingsV1alpha1Mutex.Unlock()
 	if fake.SettingsV1alpha1Stub != nil {
@@ -2960,8 +2316,7 @@ func (fake *FakeK8sClient) SettingsV1alpha1() v1alpha1d.SettingsV1alpha1Interfac
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.settingsV1alpha1Returns
-	return fakeReturns.result1
+	return fake.settingsV1alpha1Returns.result1
 }
 
 func (fake *FakeK8sClient) SettingsV1alpha1CallCount() int {
@@ -2970,196 +2325,69 @@ func (fake *FakeK8sClient) SettingsV1alpha1CallCount() int {
 	return len(fake.settingsV1alpha1ArgsForCall)
 }
 
-func (fake *FakeK8sClient) SettingsV1alpha1Calls(stub func() v1alpha1d.SettingsV1alpha1Interface) {
-	fake.settingsV1alpha1Mutex.Lock()
-	defer fake.settingsV1alpha1Mutex.Unlock()
-	fake.SettingsV1alpha1Stub = stub
-}
-
-func (fake *FakeK8sClient) SettingsV1alpha1Returns(result1 v1alpha1d.SettingsV1alpha1Interface) {
-	fake.settingsV1alpha1Mutex.Lock()
-	defer fake.settingsV1alpha1Mutex.Unlock()
+func (fake *FakeK8sClient) SettingsV1alpha1Returns(result1 settingsv1alpha1.SettingsV1alpha1Interface) {
 	fake.SettingsV1alpha1Stub = nil
 	fake.settingsV1alpha1Returns = struct {
-		result1 v1alpha1d.SettingsV1alpha1Interface
+		result1 settingsv1alpha1.SettingsV1alpha1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) SettingsV1alpha1ReturnsOnCall(i int, result1 v1alpha1d.SettingsV1alpha1Interface) {
-	fake.settingsV1alpha1Mutex.Lock()
-	defer fake.settingsV1alpha1Mutex.Unlock()
+func (fake *FakeK8sClient) SettingsV1alpha1ReturnsOnCall(i int, result1 settingsv1alpha1.SettingsV1alpha1Interface) {
 	fake.SettingsV1alpha1Stub = nil
 	if fake.settingsV1alpha1ReturnsOnCall == nil {
 		fake.settingsV1alpha1ReturnsOnCall = make(map[int]struct {
-			result1 v1alpha1d.SettingsV1alpha1Interface
+			result1 settingsv1alpha1.SettingsV1alpha1Interface
 		})
 	}
 	fake.settingsV1alpha1ReturnsOnCall[i] = struct {
-		result1 v1alpha1d.SettingsV1alpha1Interface
+		result1 settingsv1alpha1.SettingsV1alpha1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) Storage() v1h.StorageV1Interface {
-	fake.storageMutex.Lock()
-	ret, specificReturn := fake.storageReturnsOnCall[len(fake.storageArgsForCall)]
-	fake.storageArgsForCall = append(fake.storageArgsForCall, struct {
-	}{})
-	fake.recordInvocation("Storage", []interface{}{})
-	fake.storageMutex.Unlock()
-	if fake.StorageStub != nil {
-		return fake.StorageStub()
+func (fake *FakeK8sClient) Settings() settingsv1alpha1.SettingsV1alpha1Interface {
+	fake.settingsMutex.Lock()
+	ret, specificReturn := fake.settingsReturnsOnCall[len(fake.settingsArgsForCall)]
+	fake.settingsArgsForCall = append(fake.settingsArgsForCall, struct{}{})
+	fake.recordInvocation("Settings", []interface{}{})
+	fake.settingsMutex.Unlock()
+	if fake.SettingsStub != nil {
+		return fake.SettingsStub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.storageReturns
-	return fakeReturns.result1
+	return fake.settingsReturns.result1
 }
 
-func (fake *FakeK8sClient) StorageCallCount() int {
-	fake.storageMutex.RLock()
-	defer fake.storageMutex.RUnlock()
-	return len(fake.storageArgsForCall)
+func (fake *FakeK8sClient) SettingsCallCount() int {
+	fake.settingsMutex.RLock()
+	defer fake.settingsMutex.RUnlock()
+	return len(fake.settingsArgsForCall)
 }
 
-func (fake *FakeK8sClient) StorageCalls(stub func() v1h.StorageV1Interface) {
-	fake.storageMutex.Lock()
-	defer fake.storageMutex.Unlock()
-	fake.StorageStub = stub
-}
-
-func (fake *FakeK8sClient) StorageReturns(result1 v1h.StorageV1Interface) {
-	fake.storageMutex.Lock()
-	defer fake.storageMutex.Unlock()
-	fake.StorageStub = nil
-	fake.storageReturns = struct {
-		result1 v1h.StorageV1Interface
+func (fake *FakeK8sClient) SettingsReturns(result1 settingsv1alpha1.SettingsV1alpha1Interface) {
+	fake.SettingsStub = nil
+	fake.settingsReturns = struct {
+		result1 settingsv1alpha1.SettingsV1alpha1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) StorageReturnsOnCall(i int, result1 v1h.StorageV1Interface) {
-	fake.storageMutex.Lock()
-	defer fake.storageMutex.Unlock()
-	fake.StorageStub = nil
-	if fake.storageReturnsOnCall == nil {
-		fake.storageReturnsOnCall = make(map[int]struct {
-			result1 v1h.StorageV1Interface
+func (fake *FakeK8sClient) SettingsReturnsOnCall(i int, result1 settingsv1alpha1.SettingsV1alpha1Interface) {
+	fake.SettingsStub = nil
+	if fake.settingsReturnsOnCall == nil {
+		fake.settingsReturnsOnCall = make(map[int]struct {
+			result1 settingsv1alpha1.SettingsV1alpha1Interface
 		})
 	}
-	fake.storageReturnsOnCall[i] = struct {
-		result1 v1h.StorageV1Interface
+	fake.settingsReturnsOnCall[i] = struct {
+		result1 settingsv1alpha1.SettingsV1alpha1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) StorageV1() v1h.StorageV1Interface {
-	fake.storageV1Mutex.Lock()
-	ret, specificReturn := fake.storageV1ReturnsOnCall[len(fake.storageV1ArgsForCall)]
-	fake.storageV1ArgsForCall = append(fake.storageV1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("StorageV1", []interface{}{})
-	fake.storageV1Mutex.Unlock()
-	if fake.StorageV1Stub != nil {
-		return fake.StorageV1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.storageV1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) StorageV1CallCount() int {
-	fake.storageV1Mutex.RLock()
-	defer fake.storageV1Mutex.RUnlock()
-	return len(fake.storageV1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) StorageV1Calls(stub func() v1h.StorageV1Interface) {
-	fake.storageV1Mutex.Lock()
-	defer fake.storageV1Mutex.Unlock()
-	fake.StorageV1Stub = stub
-}
-
-func (fake *FakeK8sClient) StorageV1Returns(result1 v1h.StorageV1Interface) {
-	fake.storageV1Mutex.Lock()
-	defer fake.storageV1Mutex.Unlock()
-	fake.StorageV1Stub = nil
-	fake.storageV1Returns = struct {
-		result1 v1h.StorageV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) StorageV1ReturnsOnCall(i int, result1 v1h.StorageV1Interface) {
-	fake.storageV1Mutex.Lock()
-	defer fake.storageV1Mutex.Unlock()
-	fake.StorageV1Stub = nil
-	if fake.storageV1ReturnsOnCall == nil {
-		fake.storageV1ReturnsOnCall = make(map[int]struct {
-			result1 v1h.StorageV1Interface
-		})
-	}
-	fake.storageV1ReturnsOnCall[i] = struct {
-		result1 v1h.StorageV1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) StorageV1alpha1() v1alpha1e.StorageV1alpha1Interface {
-	fake.storageV1alpha1Mutex.Lock()
-	ret, specificReturn := fake.storageV1alpha1ReturnsOnCall[len(fake.storageV1alpha1ArgsForCall)]
-	fake.storageV1alpha1ArgsForCall = append(fake.storageV1alpha1ArgsForCall, struct {
-	}{})
-	fake.recordInvocation("StorageV1alpha1", []interface{}{})
-	fake.storageV1alpha1Mutex.Unlock()
-	if fake.StorageV1alpha1Stub != nil {
-		return fake.StorageV1alpha1Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.storageV1alpha1Returns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sClient) StorageV1alpha1CallCount() int {
-	fake.storageV1alpha1Mutex.RLock()
-	defer fake.storageV1alpha1Mutex.RUnlock()
-	return len(fake.storageV1alpha1ArgsForCall)
-}
-
-func (fake *FakeK8sClient) StorageV1alpha1Calls(stub func() v1alpha1e.StorageV1alpha1Interface) {
-	fake.storageV1alpha1Mutex.Lock()
-	defer fake.storageV1alpha1Mutex.Unlock()
-	fake.StorageV1alpha1Stub = stub
-}
-
-func (fake *FakeK8sClient) StorageV1alpha1Returns(result1 v1alpha1e.StorageV1alpha1Interface) {
-	fake.storageV1alpha1Mutex.Lock()
-	defer fake.storageV1alpha1Mutex.Unlock()
-	fake.StorageV1alpha1Stub = nil
-	fake.storageV1alpha1Returns = struct {
-		result1 v1alpha1e.StorageV1alpha1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) StorageV1alpha1ReturnsOnCall(i int, result1 v1alpha1e.StorageV1alpha1Interface) {
-	fake.storageV1alpha1Mutex.Lock()
-	defer fake.storageV1alpha1Mutex.Unlock()
-	fake.StorageV1alpha1Stub = nil
-	if fake.storageV1alpha1ReturnsOnCall == nil {
-		fake.storageV1alpha1ReturnsOnCall = make(map[int]struct {
-			result1 v1alpha1e.StorageV1alpha1Interface
-		})
-	}
-	fake.storageV1alpha1ReturnsOnCall[i] = struct {
-		result1 v1alpha1e.StorageV1alpha1Interface
-	}{result1}
-}
-
-func (fake *FakeK8sClient) StorageV1beta1() v1beta1l.StorageV1beta1Interface {
+func (fake *FakeK8sClient) StorageV1beta1() storagev1beta1.StorageV1beta1Interface {
 	fake.storageV1beta1Mutex.Lock()
 	ret, specificReturn := fake.storageV1beta1ReturnsOnCall[len(fake.storageV1beta1ArgsForCall)]
-	fake.storageV1beta1ArgsForCall = append(fake.storageV1beta1ArgsForCall, struct {
-	}{})
+	fake.storageV1beta1ArgsForCall = append(fake.storageV1beta1ArgsForCall, struct{}{})
 	fake.recordInvocation("StorageV1beta1", []interface{}{})
 	fake.storageV1beta1Mutex.Unlock()
 	if fake.StorageV1beta1Stub != nil {
@@ -3168,8 +2396,7 @@ func (fake *FakeK8sClient) StorageV1beta1() v1beta1l.StorageV1beta1Interface {
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.storageV1beta1Returns
-	return fakeReturns.result1
+	return fake.storageV1beta1Returns.result1
 }
 
 func (fake *FakeK8sClient) StorageV1beta1CallCount() int {
@@ -3178,145 +2405,251 @@ func (fake *FakeK8sClient) StorageV1beta1CallCount() int {
 	return len(fake.storageV1beta1ArgsForCall)
 }
 
-func (fake *FakeK8sClient) StorageV1beta1Calls(stub func() v1beta1l.StorageV1beta1Interface) {
-	fake.storageV1beta1Mutex.Lock()
-	defer fake.storageV1beta1Mutex.Unlock()
-	fake.StorageV1beta1Stub = stub
-}
-
-func (fake *FakeK8sClient) StorageV1beta1Returns(result1 v1beta1l.StorageV1beta1Interface) {
-	fake.storageV1beta1Mutex.Lock()
-	defer fake.storageV1beta1Mutex.Unlock()
+func (fake *FakeK8sClient) StorageV1beta1Returns(result1 storagev1beta1.StorageV1beta1Interface) {
 	fake.StorageV1beta1Stub = nil
 	fake.storageV1beta1Returns = struct {
-		result1 v1beta1l.StorageV1beta1Interface
+		result1 storagev1beta1.StorageV1beta1Interface
 	}{result1}
 }
 
-func (fake *FakeK8sClient) StorageV1beta1ReturnsOnCall(i int, result1 v1beta1l.StorageV1beta1Interface) {
-	fake.storageV1beta1Mutex.Lock()
-	defer fake.storageV1beta1Mutex.Unlock()
+func (fake *FakeK8sClient) StorageV1beta1ReturnsOnCall(i int, result1 storagev1beta1.StorageV1beta1Interface) {
 	fake.StorageV1beta1Stub = nil
 	if fake.storageV1beta1ReturnsOnCall == nil {
 		fake.storageV1beta1ReturnsOnCall = make(map[int]struct {
-			result1 v1beta1l.StorageV1beta1Interface
+			result1 storagev1beta1.StorageV1beta1Interface
 		})
 	}
 	fake.storageV1beta1ReturnsOnCall[i] = struct {
-		result1 v1beta1l.StorageV1beta1Interface
+		result1 storagev1beta1.StorageV1beta1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) StorageV1() storagev1.StorageV1Interface {
+	fake.storageV1Mutex.Lock()
+	ret, specificReturn := fake.storageV1ReturnsOnCall[len(fake.storageV1ArgsForCall)]
+	fake.storageV1ArgsForCall = append(fake.storageV1ArgsForCall, struct{}{})
+	fake.recordInvocation("StorageV1", []interface{}{})
+	fake.storageV1Mutex.Unlock()
+	if fake.StorageV1Stub != nil {
+		return fake.StorageV1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.storageV1Returns.result1
+}
+
+func (fake *FakeK8sClient) StorageV1CallCount() int {
+	fake.storageV1Mutex.RLock()
+	defer fake.storageV1Mutex.RUnlock()
+	return len(fake.storageV1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) StorageV1Returns(result1 storagev1.StorageV1Interface) {
+	fake.StorageV1Stub = nil
+	fake.storageV1Returns = struct {
+		result1 storagev1.StorageV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) StorageV1ReturnsOnCall(i int, result1 storagev1.StorageV1Interface) {
+	fake.StorageV1Stub = nil
+	if fake.storageV1ReturnsOnCall == nil {
+		fake.storageV1ReturnsOnCall = make(map[int]struct {
+			result1 storagev1.StorageV1Interface
+		})
+	}
+	fake.storageV1ReturnsOnCall[i] = struct {
+		result1 storagev1.StorageV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) Storage() storagev1.StorageV1Interface {
+	fake.storageMutex.Lock()
+	ret, specificReturn := fake.storageReturnsOnCall[len(fake.storageArgsForCall)]
+	fake.storageArgsForCall = append(fake.storageArgsForCall, struct{}{})
+	fake.recordInvocation("Storage", []interface{}{})
+	fake.storageMutex.Unlock()
+	if fake.StorageStub != nil {
+		return fake.StorageStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.storageReturns.result1
+}
+
+func (fake *FakeK8sClient) StorageCallCount() int {
+	fake.storageMutex.RLock()
+	defer fake.storageMutex.RUnlock()
+	return len(fake.storageArgsForCall)
+}
+
+func (fake *FakeK8sClient) StorageReturns(result1 storagev1.StorageV1Interface) {
+	fake.StorageStub = nil
+	fake.storageReturns = struct {
+		result1 storagev1.StorageV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) StorageReturnsOnCall(i int, result1 storagev1.StorageV1Interface) {
+	fake.StorageStub = nil
+	if fake.storageReturnsOnCall == nil {
+		fake.storageReturnsOnCall = make(map[int]struct {
+			result1 storagev1.StorageV1Interface
+		})
+	}
+	fake.storageReturnsOnCall[i] = struct {
+		result1 storagev1.StorageV1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) StorageV1alpha1() storagev1alpha1.StorageV1alpha1Interface {
+	fake.storageV1alpha1Mutex.Lock()
+	ret, specificReturn := fake.storageV1alpha1ReturnsOnCall[len(fake.storageV1alpha1ArgsForCall)]
+	fake.storageV1alpha1ArgsForCall = append(fake.storageV1alpha1ArgsForCall, struct{}{})
+	fake.recordInvocation("StorageV1alpha1", []interface{}{})
+	fake.storageV1alpha1Mutex.Unlock()
+	if fake.StorageV1alpha1Stub != nil {
+		return fake.StorageV1alpha1Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.storageV1alpha1Returns.result1
+}
+
+func (fake *FakeK8sClient) StorageV1alpha1CallCount() int {
+	fake.storageV1alpha1Mutex.RLock()
+	defer fake.storageV1alpha1Mutex.RUnlock()
+	return len(fake.storageV1alpha1ArgsForCall)
+}
+
+func (fake *FakeK8sClient) StorageV1alpha1Returns(result1 storagev1alpha1.StorageV1alpha1Interface) {
+	fake.StorageV1alpha1Stub = nil
+	fake.storageV1alpha1Returns = struct {
+		result1 storagev1alpha1.StorageV1alpha1Interface
+	}{result1}
+}
+
+func (fake *FakeK8sClient) StorageV1alpha1ReturnsOnCall(i int, result1 storagev1alpha1.StorageV1alpha1Interface) {
+	fake.StorageV1alpha1Stub = nil
+	if fake.storageV1alpha1ReturnsOnCall == nil {
+		fake.storageV1alpha1ReturnsOnCall = make(map[int]struct {
+			result1 storagev1alpha1.StorageV1alpha1Interface
+		})
+	}
+	fake.storageV1alpha1ReturnsOnCall[i] = struct {
+		result1 storagev1alpha1.StorageV1alpha1Interface
 	}{result1}
 }
 
 func (fake *FakeK8sClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.admissionregistrationMutex.RLock()
-	defer fake.admissionregistrationMutex.RUnlock()
+	fake.discoveryMutex.RLock()
+	defer fake.discoveryMutex.RUnlock()
 	fake.admissionregistrationV1alpha1Mutex.RLock()
 	defer fake.admissionregistrationV1alpha1Mutex.RUnlock()
 	fake.admissionregistrationV1beta1Mutex.RLock()
 	defer fake.admissionregistrationV1beta1Mutex.RUnlock()
-	fake.appsMutex.RLock()
-	defer fake.appsMutex.RUnlock()
-	fake.appsV1Mutex.RLock()
-	defer fake.appsV1Mutex.RUnlock()
+	fake.admissionregistrationMutex.RLock()
+	defer fake.admissionregistrationMutex.RUnlock()
 	fake.appsV1beta1Mutex.RLock()
 	defer fake.appsV1beta1Mutex.RUnlock()
 	fake.appsV1beta2Mutex.RLock()
 	defer fake.appsV1beta2Mutex.RUnlock()
-	fake.auditregistrationMutex.RLock()
-	defer fake.auditregistrationMutex.RUnlock()
+	fake.appsV1Mutex.RLock()
+	defer fake.appsV1Mutex.RUnlock()
+	fake.appsMutex.RLock()
+	defer fake.appsMutex.RUnlock()
 	fake.auditregistrationV1alpha1Mutex.RLock()
 	defer fake.auditregistrationV1alpha1Mutex.RUnlock()
-	fake.authenticationMutex.RLock()
-	defer fake.authenticationMutex.RUnlock()
+	fake.auditregistrationMutex.RLock()
+	defer fake.auditregistrationMutex.RUnlock()
 	fake.authenticationV1Mutex.RLock()
 	defer fake.authenticationV1Mutex.RUnlock()
+	fake.authenticationMutex.RLock()
+	defer fake.authenticationMutex.RUnlock()
 	fake.authenticationV1beta1Mutex.RLock()
 	defer fake.authenticationV1beta1Mutex.RUnlock()
-	fake.authorizationMutex.RLock()
-	defer fake.authorizationMutex.RUnlock()
 	fake.authorizationV1Mutex.RLock()
 	defer fake.authorizationV1Mutex.RUnlock()
+	fake.authorizationMutex.RLock()
+	defer fake.authorizationMutex.RUnlock()
 	fake.authorizationV1beta1Mutex.RLock()
 	defer fake.authorizationV1beta1Mutex.RUnlock()
-	fake.autoscalingMutex.RLock()
-	defer fake.autoscalingMutex.RUnlock()
 	fake.autoscalingV1Mutex.RLock()
 	defer fake.autoscalingV1Mutex.RUnlock()
+	fake.autoscalingMutex.RLock()
+	defer fake.autoscalingMutex.RUnlock()
 	fake.autoscalingV2beta1Mutex.RLock()
 	defer fake.autoscalingV2beta1Mutex.RUnlock()
 	fake.autoscalingV2beta2Mutex.RLock()
 	defer fake.autoscalingV2beta2Mutex.RUnlock()
-	fake.batchMutex.RLock()
-	defer fake.batchMutex.RUnlock()
 	fake.batchV1Mutex.RLock()
 	defer fake.batchV1Mutex.RUnlock()
+	fake.batchMutex.RLock()
+	defer fake.batchMutex.RUnlock()
 	fake.batchV1beta1Mutex.RLock()
 	defer fake.batchV1beta1Mutex.RUnlock()
 	fake.batchV2alpha1Mutex.RLock()
 	defer fake.batchV2alpha1Mutex.RUnlock()
-	fake.certificatesMutex.RLock()
-	defer fake.certificatesMutex.RUnlock()
 	fake.certificatesV1beta1Mutex.RLock()
 	defer fake.certificatesV1beta1Mutex.RUnlock()
-	fake.coordinationMutex.RLock()
-	defer fake.coordinationMutex.RUnlock()
+	fake.certificatesMutex.RLock()
+	defer fake.certificatesMutex.RUnlock()
 	fake.coordinationV1beta1Mutex.RLock()
 	defer fake.coordinationV1beta1Mutex.RUnlock()
-	fake.coreMutex.RLock()
-	defer fake.coreMutex.RUnlock()
+	fake.coordinationMutex.RLock()
+	defer fake.coordinationMutex.RUnlock()
 	fake.coreV1Mutex.RLock()
 	defer fake.coreV1Mutex.RUnlock()
-	fake.discoveryMutex.RLock()
-	defer fake.discoveryMutex.RUnlock()
-	fake.eventsMutex.RLock()
-	defer fake.eventsMutex.RUnlock()
+	fake.coreMutex.RLock()
+	defer fake.coreMutex.RUnlock()
 	fake.eventsV1beta1Mutex.RLock()
 	defer fake.eventsV1beta1Mutex.RUnlock()
-	fake.extensionsMutex.RLock()
-	defer fake.extensionsMutex.RUnlock()
+	fake.eventsMutex.RLock()
+	defer fake.eventsMutex.RUnlock()
 	fake.extensionsV1beta1Mutex.RLock()
 	defer fake.extensionsV1beta1Mutex.RUnlock()
-	fake.networkingMutex.RLock()
-	defer fake.networkingMutex.RUnlock()
+	fake.extensionsMutex.RLock()
+	defer fake.extensionsMutex.RUnlock()
 	fake.networkingV1Mutex.RLock()
 	defer fake.networkingV1Mutex.RUnlock()
-	fake.policyMutex.RLock()
-	defer fake.policyMutex.RUnlock()
+	fake.networkingMutex.RLock()
+	defer fake.networkingMutex.RUnlock()
 	fake.policyV1beta1Mutex.RLock()
 	defer fake.policyV1beta1Mutex.RUnlock()
-	fake.rbacMutex.RLock()
-	defer fake.rbacMutex.RUnlock()
+	fake.policyMutex.RLock()
+	defer fake.policyMutex.RUnlock()
 	fake.rbacV1Mutex.RLock()
 	defer fake.rbacV1Mutex.RUnlock()
-	fake.rbacV1alpha1Mutex.RLock()
-	defer fake.rbacV1alpha1Mutex.RUnlock()
+	fake.rbacMutex.RLock()
+	defer fake.rbacMutex.RUnlock()
 	fake.rbacV1beta1Mutex.RLock()
 	defer fake.rbacV1beta1Mutex.RUnlock()
-	fake.schedulingMutex.RLock()
-	defer fake.schedulingMutex.RUnlock()
+	fake.rbacV1alpha1Mutex.RLock()
+	defer fake.rbacV1alpha1Mutex.RUnlock()
 	fake.schedulingV1alpha1Mutex.RLock()
 	defer fake.schedulingV1alpha1Mutex.RUnlock()
 	fake.schedulingV1beta1Mutex.RLock()
 	defer fake.schedulingV1beta1Mutex.RUnlock()
-	fake.settingsMutex.RLock()
-	defer fake.settingsMutex.RUnlock()
+	fake.schedulingMutex.RLock()
+	defer fake.schedulingMutex.RUnlock()
 	fake.settingsV1alpha1Mutex.RLock()
 	defer fake.settingsV1alpha1Mutex.RUnlock()
-	fake.storageMutex.RLock()
-	defer fake.storageMutex.RUnlock()
-	fake.storageV1Mutex.RLock()
-	defer fake.storageV1Mutex.RUnlock()
-	fake.storageV1alpha1Mutex.RLock()
-	defer fake.storageV1alpha1Mutex.RUnlock()
+	fake.settingsMutex.RLock()
+	defer fake.settingsMutex.RUnlock()
 	fake.storageV1beta1Mutex.RLock()
 	defer fake.storageV1beta1Mutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	fake.storageV1Mutex.RLock()
+	defer fake.storageV1Mutex.RUnlock()
+	fake.storageMutex.RLock()
+	defer fake.storageMutex.RUnlock()
+	fake.storageV1alpha1Mutex.RLock()
+	defer fake.storageV1alpha1Mutex.RUnlock()
+	return fake.invocations
 }
 
 func (fake *FakeK8sClient) recordInvocation(key string, args []interface{}) {

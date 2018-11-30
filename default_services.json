@@ -1,0 +1,22 @@
+[
+  {
+    "id": "db404fc5-97fb-4806-9827-07e0e8d3bd51",
+    "name": "nfs",
+    "description": "Existing NFS volumes",
+    "bindable": true,
+    "plan_updateable": false,
+    "tags": [
+       "nfs"
+    ],
+    "plans": [
+      {
+        "id": "190de554-4fc1-4008-ace9-5d3796140b48",
+        "name": "Existing",
+        "description": "A preexisting filesystem"
+      }
+    ],
+    "requires":[
+       "volume_mount"
+    ]
+  }
+]

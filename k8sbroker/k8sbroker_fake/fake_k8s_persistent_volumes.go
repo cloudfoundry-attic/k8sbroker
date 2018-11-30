@@ -2,13 +2,13 @@
 package k8sbroker_fake
 
 import (
-	sync "sync"
+	"sync"
 
-	k8sbroker "code.cloudfoundry.org/k8sbroker/k8sbroker"
-	v1 "k8s.io/api/core/v1"
-	v1a "k8s.io/apimachinery/pkg/apis/meta/v1"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
+	"code.cloudfoundry.org/k8sbroker/k8sbroker"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/watch"
 )
 
 type FakeK8sPersistentVolumes struct {
@@ -22,73 +22,6 @@ type FakeK8sPersistentVolumes struct {
 		result2 error
 	}
 	createReturnsOnCall map[int]struct {
-		result1 *v1.PersistentVolume
-		result2 error
-	}
-	DeleteStub        func(string, *v1a.DeleteOptions) error
-	deleteMutex       sync.RWMutex
-	deleteArgsForCall []struct {
-		arg1 string
-		arg2 *v1a.DeleteOptions
-	}
-	deleteReturns struct {
-		result1 error
-	}
-	deleteReturnsOnCall map[int]struct {
-		result1 error
-	}
-	DeleteCollectionStub        func(*v1a.DeleteOptions, v1a.ListOptions) error
-	deleteCollectionMutex       sync.RWMutex
-	deleteCollectionArgsForCall []struct {
-		arg1 *v1a.DeleteOptions
-		arg2 v1a.ListOptions
-	}
-	deleteCollectionReturns struct {
-		result1 error
-	}
-	deleteCollectionReturnsOnCall map[int]struct {
-		result1 error
-	}
-	GetStub        func(string, v1a.GetOptions) (*v1.PersistentVolume, error)
-	getMutex       sync.RWMutex
-	getArgsForCall []struct {
-		arg1 string
-		arg2 v1a.GetOptions
-	}
-	getReturns struct {
-		result1 *v1.PersistentVolume
-		result2 error
-	}
-	getReturnsOnCall map[int]struct {
-		result1 *v1.PersistentVolume
-		result2 error
-	}
-	ListStub        func(v1a.ListOptions) (*v1.PersistentVolumeList, error)
-	listMutex       sync.RWMutex
-	listArgsForCall []struct {
-		arg1 v1a.ListOptions
-	}
-	listReturns struct {
-		result1 *v1.PersistentVolumeList
-		result2 error
-	}
-	listReturnsOnCall map[int]struct {
-		result1 *v1.PersistentVolumeList
-		result2 error
-	}
-	PatchStub        func(string, types.PatchType, []byte, ...string) (*v1.PersistentVolume, error)
-	patchMutex       sync.RWMutex
-	patchArgsForCall []struct {
-		arg1 string
-		arg2 types.PatchType
-		arg3 []byte
-		arg4 []string
-	}
-	patchReturns struct {
-		result1 *v1.PersistentVolume
-		result2 error
-	}
-	patchReturnsOnCall map[int]struct {
 		result1 *v1.PersistentVolume
 		result2 error
 	}
@@ -118,10 +51,61 @@ type FakeK8sPersistentVolumes struct {
 		result1 *v1.PersistentVolume
 		result2 error
 	}
-	WatchStub        func(v1a.ListOptions) (watch.Interface, error)
+	DeleteStub        func(name string, options *metav1.DeleteOptions) error
+	deleteMutex       sync.RWMutex
+	deleteArgsForCall []struct {
+		name    string
+		options *metav1.DeleteOptions
+	}
+	deleteReturns struct {
+		result1 error
+	}
+	deleteReturnsOnCall map[int]struct {
+		result1 error
+	}
+	DeleteCollectionStub        func(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error
+	deleteCollectionMutex       sync.RWMutex
+	deleteCollectionArgsForCall []struct {
+		options     *metav1.DeleteOptions
+		listOptions metav1.ListOptions
+	}
+	deleteCollectionReturns struct {
+		result1 error
+	}
+	deleteCollectionReturnsOnCall map[int]struct {
+		result1 error
+	}
+	GetStub        func(name string, options metav1.GetOptions) (*v1.PersistentVolume, error)
+	getMutex       sync.RWMutex
+	getArgsForCall []struct {
+		name    string
+		options metav1.GetOptions
+	}
+	getReturns struct {
+		result1 *v1.PersistentVolume
+		result2 error
+	}
+	getReturnsOnCall map[int]struct {
+		result1 *v1.PersistentVolume
+		result2 error
+	}
+	ListStub        func(opts metav1.ListOptions) (*v1.PersistentVolumeList, error)
+	listMutex       sync.RWMutex
+	listArgsForCall []struct {
+		opts metav1.ListOptions
+	}
+	listReturns struct {
+		result1 *v1.PersistentVolumeList
+		result2 error
+	}
+	listReturnsOnCall map[int]struct {
+		result1 *v1.PersistentVolumeList
+		result2 error
+	}
+	WatchStub        func(opts metav1.ListOptions) (watch.Interface, error)
 	watchMutex       sync.RWMutex
 	watchArgsForCall []struct {
-		arg1 v1a.ListOptions
+		opts metav1.ListOptions
 	}
 	watchReturns struct {
 		result1 watch.Interface
@@ -129,6 +113,22 @@ type FakeK8sPersistentVolumes struct {
 	}
 	watchReturnsOnCall map[int]struct {
 		result1 watch.Interface
+		result2 error
+	}
+	PatchStub        func(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1.PersistentVolume, err error)
+	patchMutex       sync.RWMutex
+	patchArgsForCall []struct {
+		name         string
+		pt           types.PatchType
+		data         []byte
+		subresources []string
+	}
+	patchReturns struct {
+		result1 *v1.PersistentVolume
+		result2 error
+	}
+	patchReturnsOnCall map[int]struct {
+		result1 *v1.PersistentVolume
 		result2 error
 	}
 	invocations      map[string][][]interface{}
@@ -149,8 +149,7 @@ func (fake *FakeK8sPersistentVolumes) Create(arg1 *v1.PersistentVolume) (*v1.Per
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.createReturns
-	return fakeReturns.result1, fakeReturns.result2
+	return fake.createReturns.result1, fake.createReturns.result2
 }
 
 func (fake *FakeK8sPersistentVolumes) CreateCallCount() int {
@@ -159,22 +158,13 @@ func (fake *FakeK8sPersistentVolumes) CreateCallCount() int {
 	return len(fake.createArgsForCall)
 }
 
-func (fake *FakeK8sPersistentVolumes) CreateCalls(stub func(*v1.PersistentVolume) (*v1.PersistentVolume, error)) {
-	fake.createMutex.Lock()
-	defer fake.createMutex.Unlock()
-	fake.CreateStub = stub
-}
-
 func (fake *FakeK8sPersistentVolumes) CreateArgsForCall(i int) *v1.PersistentVolume {
 	fake.createMutex.RLock()
 	defer fake.createMutex.RUnlock()
-	argsForCall := fake.createArgsForCall[i]
-	return argsForCall.arg1
+	return fake.createArgsForCall[i].arg1
 }
 
 func (fake *FakeK8sPersistentVolumes) CreateReturns(result1 *v1.PersistentVolume, result2 error) {
-	fake.createMutex.Lock()
-	defer fake.createMutex.Unlock()
 	fake.CreateStub = nil
 	fake.createReturns = struct {
 		result1 *v1.PersistentVolume
@@ -183,8 +173,6 @@ func (fake *FakeK8sPersistentVolumes) CreateReturns(result1 *v1.PersistentVolume
 }
 
 func (fake *FakeK8sPersistentVolumes) CreateReturnsOnCall(i int, result1 *v1.PersistentVolume, result2 error) {
-	fake.createMutex.Lock()
-	defer fake.createMutex.Unlock()
 	fake.CreateStub = nil
 	if fake.createReturnsOnCall == nil {
 		fake.createReturnsOnCall = make(map[int]struct {
@@ -193,326 +181,6 @@ func (fake *FakeK8sPersistentVolumes) CreateReturnsOnCall(i int, result1 *v1.Per
 		})
 	}
 	fake.createReturnsOnCall[i] = struct {
-		result1 *v1.PersistentVolume
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeK8sPersistentVolumes) Delete(arg1 string, arg2 *v1a.DeleteOptions) error {
-	fake.deleteMutex.Lock()
-	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
-	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
-		arg1 string
-		arg2 *v1a.DeleteOptions
-	}{arg1, arg2})
-	fake.recordInvocation("Delete", []interface{}{arg1, arg2})
-	fake.deleteMutex.Unlock()
-	if fake.DeleteStub != nil {
-		return fake.DeleteStub(arg1, arg2)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.deleteReturns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sPersistentVolumes) DeleteCallCount() int {
-	fake.deleteMutex.RLock()
-	defer fake.deleteMutex.RUnlock()
-	return len(fake.deleteArgsForCall)
-}
-
-func (fake *FakeK8sPersistentVolumes) DeleteCalls(stub func(string, *v1a.DeleteOptions) error) {
-	fake.deleteMutex.Lock()
-	defer fake.deleteMutex.Unlock()
-	fake.DeleteStub = stub
-}
-
-func (fake *FakeK8sPersistentVolumes) DeleteArgsForCall(i int) (string, *v1a.DeleteOptions) {
-	fake.deleteMutex.RLock()
-	defer fake.deleteMutex.RUnlock()
-	argsForCall := fake.deleteArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
-}
-
-func (fake *FakeK8sPersistentVolumes) DeleteReturns(result1 error) {
-	fake.deleteMutex.Lock()
-	defer fake.deleteMutex.Unlock()
-	fake.DeleteStub = nil
-	fake.deleteReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeK8sPersistentVolumes) DeleteReturnsOnCall(i int, result1 error) {
-	fake.deleteMutex.Lock()
-	defer fake.deleteMutex.Unlock()
-	fake.DeleteStub = nil
-	if fake.deleteReturnsOnCall == nil {
-		fake.deleteReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.deleteReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeK8sPersistentVolumes) DeleteCollection(arg1 *v1a.DeleteOptions, arg2 v1a.ListOptions) error {
-	fake.deleteCollectionMutex.Lock()
-	ret, specificReturn := fake.deleteCollectionReturnsOnCall[len(fake.deleteCollectionArgsForCall)]
-	fake.deleteCollectionArgsForCall = append(fake.deleteCollectionArgsForCall, struct {
-		arg1 *v1a.DeleteOptions
-		arg2 v1a.ListOptions
-	}{arg1, arg2})
-	fake.recordInvocation("DeleteCollection", []interface{}{arg1, arg2})
-	fake.deleteCollectionMutex.Unlock()
-	if fake.DeleteCollectionStub != nil {
-		return fake.DeleteCollectionStub(arg1, arg2)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.deleteCollectionReturns
-	return fakeReturns.result1
-}
-
-func (fake *FakeK8sPersistentVolumes) DeleteCollectionCallCount() int {
-	fake.deleteCollectionMutex.RLock()
-	defer fake.deleteCollectionMutex.RUnlock()
-	return len(fake.deleteCollectionArgsForCall)
-}
-
-func (fake *FakeK8sPersistentVolumes) DeleteCollectionCalls(stub func(*v1a.DeleteOptions, v1a.ListOptions) error) {
-	fake.deleteCollectionMutex.Lock()
-	defer fake.deleteCollectionMutex.Unlock()
-	fake.DeleteCollectionStub = stub
-}
-
-func (fake *FakeK8sPersistentVolumes) DeleteCollectionArgsForCall(i int) (*v1a.DeleteOptions, v1a.ListOptions) {
-	fake.deleteCollectionMutex.RLock()
-	defer fake.deleteCollectionMutex.RUnlock()
-	argsForCall := fake.deleteCollectionArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
-}
-
-func (fake *FakeK8sPersistentVolumes) DeleteCollectionReturns(result1 error) {
-	fake.deleteCollectionMutex.Lock()
-	defer fake.deleteCollectionMutex.Unlock()
-	fake.DeleteCollectionStub = nil
-	fake.deleteCollectionReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeK8sPersistentVolumes) DeleteCollectionReturnsOnCall(i int, result1 error) {
-	fake.deleteCollectionMutex.Lock()
-	defer fake.deleteCollectionMutex.Unlock()
-	fake.DeleteCollectionStub = nil
-	if fake.deleteCollectionReturnsOnCall == nil {
-		fake.deleteCollectionReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.deleteCollectionReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeK8sPersistentVolumes) Get(arg1 string, arg2 v1a.GetOptions) (*v1.PersistentVolume, error) {
-	fake.getMutex.Lock()
-	ret, specificReturn := fake.getReturnsOnCall[len(fake.getArgsForCall)]
-	fake.getArgsForCall = append(fake.getArgsForCall, struct {
-		arg1 string
-		arg2 v1a.GetOptions
-	}{arg1, arg2})
-	fake.recordInvocation("Get", []interface{}{arg1, arg2})
-	fake.getMutex.Unlock()
-	if fake.GetStub != nil {
-		return fake.GetStub(arg1, arg2)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	fakeReturns := fake.getReturns
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *FakeK8sPersistentVolumes) GetCallCount() int {
-	fake.getMutex.RLock()
-	defer fake.getMutex.RUnlock()
-	return len(fake.getArgsForCall)
-}
-
-func (fake *FakeK8sPersistentVolumes) GetCalls(stub func(string, v1a.GetOptions) (*v1.PersistentVolume, error)) {
-	fake.getMutex.Lock()
-	defer fake.getMutex.Unlock()
-	fake.GetStub = stub
-}
-
-func (fake *FakeK8sPersistentVolumes) GetArgsForCall(i int) (string, v1a.GetOptions) {
-	fake.getMutex.RLock()
-	defer fake.getMutex.RUnlock()
-	argsForCall := fake.getArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
-}
-
-func (fake *FakeK8sPersistentVolumes) GetReturns(result1 *v1.PersistentVolume, result2 error) {
-	fake.getMutex.Lock()
-	defer fake.getMutex.Unlock()
-	fake.GetStub = nil
-	fake.getReturns = struct {
-		result1 *v1.PersistentVolume
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeK8sPersistentVolumes) GetReturnsOnCall(i int, result1 *v1.PersistentVolume, result2 error) {
-	fake.getMutex.Lock()
-	defer fake.getMutex.Unlock()
-	fake.GetStub = nil
-	if fake.getReturnsOnCall == nil {
-		fake.getReturnsOnCall = make(map[int]struct {
-			result1 *v1.PersistentVolume
-			result2 error
-		})
-	}
-	fake.getReturnsOnCall[i] = struct {
-		result1 *v1.PersistentVolume
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeK8sPersistentVolumes) List(arg1 v1a.ListOptions) (*v1.PersistentVolumeList, error) {
-	fake.listMutex.Lock()
-	ret, specificReturn := fake.listReturnsOnCall[len(fake.listArgsForCall)]
-	fake.listArgsForCall = append(fake.listArgsForCall, struct {
-		arg1 v1a.ListOptions
-	}{arg1})
-	fake.recordInvocation("List", []interface{}{arg1})
-	fake.listMutex.Unlock()
-	if fake.ListStub != nil {
-		return fake.ListStub(arg1)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	fakeReturns := fake.listReturns
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *FakeK8sPersistentVolumes) ListCallCount() int {
-	fake.listMutex.RLock()
-	defer fake.listMutex.RUnlock()
-	return len(fake.listArgsForCall)
-}
-
-func (fake *FakeK8sPersistentVolumes) ListCalls(stub func(v1a.ListOptions) (*v1.PersistentVolumeList, error)) {
-	fake.listMutex.Lock()
-	defer fake.listMutex.Unlock()
-	fake.ListStub = stub
-}
-
-func (fake *FakeK8sPersistentVolumes) ListArgsForCall(i int) v1a.ListOptions {
-	fake.listMutex.RLock()
-	defer fake.listMutex.RUnlock()
-	argsForCall := fake.listArgsForCall[i]
-	return argsForCall.arg1
-}
-
-func (fake *FakeK8sPersistentVolumes) ListReturns(result1 *v1.PersistentVolumeList, result2 error) {
-	fake.listMutex.Lock()
-	defer fake.listMutex.Unlock()
-	fake.ListStub = nil
-	fake.listReturns = struct {
-		result1 *v1.PersistentVolumeList
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeK8sPersistentVolumes) ListReturnsOnCall(i int, result1 *v1.PersistentVolumeList, result2 error) {
-	fake.listMutex.Lock()
-	defer fake.listMutex.Unlock()
-	fake.ListStub = nil
-	if fake.listReturnsOnCall == nil {
-		fake.listReturnsOnCall = make(map[int]struct {
-			result1 *v1.PersistentVolumeList
-			result2 error
-		})
-	}
-	fake.listReturnsOnCall[i] = struct {
-		result1 *v1.PersistentVolumeList
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeK8sPersistentVolumes) Patch(arg1 string, arg2 types.PatchType, arg3 []byte, arg4 ...string) (*v1.PersistentVolume, error) {
-	var arg3Copy []byte
-	if arg3 != nil {
-		arg3Copy = make([]byte, len(arg3))
-		copy(arg3Copy, arg3)
-	}
-	fake.patchMutex.Lock()
-	ret, specificReturn := fake.patchReturnsOnCall[len(fake.patchArgsForCall)]
-	fake.patchArgsForCall = append(fake.patchArgsForCall, struct {
-		arg1 string
-		arg2 types.PatchType
-		arg3 []byte
-		arg4 []string
-	}{arg1, arg2, arg3Copy, arg4})
-	fake.recordInvocation("Patch", []interface{}{arg1, arg2, arg3Copy, arg4})
-	fake.patchMutex.Unlock()
-	if fake.PatchStub != nil {
-		return fake.PatchStub(arg1, arg2, arg3, arg4...)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	fakeReturns := fake.patchReturns
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *FakeK8sPersistentVolumes) PatchCallCount() int {
-	fake.patchMutex.RLock()
-	defer fake.patchMutex.RUnlock()
-	return len(fake.patchArgsForCall)
-}
-
-func (fake *FakeK8sPersistentVolumes) PatchCalls(stub func(string, types.PatchType, []byte, ...string) (*v1.PersistentVolume, error)) {
-	fake.patchMutex.Lock()
-	defer fake.patchMutex.Unlock()
-	fake.PatchStub = stub
-}
-
-func (fake *FakeK8sPersistentVolumes) PatchArgsForCall(i int) (string, types.PatchType, []byte, []string) {
-	fake.patchMutex.RLock()
-	defer fake.patchMutex.RUnlock()
-	argsForCall := fake.patchArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
-}
-
-func (fake *FakeK8sPersistentVolumes) PatchReturns(result1 *v1.PersistentVolume, result2 error) {
-	fake.patchMutex.Lock()
-	defer fake.patchMutex.Unlock()
-	fake.PatchStub = nil
-	fake.patchReturns = struct {
-		result1 *v1.PersistentVolume
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeK8sPersistentVolumes) PatchReturnsOnCall(i int, result1 *v1.PersistentVolume, result2 error) {
-	fake.patchMutex.Lock()
-	defer fake.patchMutex.Unlock()
-	fake.PatchStub = nil
-	if fake.patchReturnsOnCall == nil {
-		fake.patchReturnsOnCall = make(map[int]struct {
-			result1 *v1.PersistentVolume
-			result2 error
-		})
-	}
-	fake.patchReturnsOnCall[i] = struct {
 		result1 *v1.PersistentVolume
 		result2 error
 	}{result1, result2}
@@ -532,8 +200,7 @@ func (fake *FakeK8sPersistentVolumes) Update(arg1 *v1.PersistentVolume) (*v1.Per
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.updateReturns
-	return fakeReturns.result1, fakeReturns.result2
+	return fake.updateReturns.result1, fake.updateReturns.result2
 }
 
 func (fake *FakeK8sPersistentVolumes) UpdateCallCount() int {
@@ -542,22 +209,13 @@ func (fake *FakeK8sPersistentVolumes) UpdateCallCount() int {
 	return len(fake.updateArgsForCall)
 }
 
-func (fake *FakeK8sPersistentVolumes) UpdateCalls(stub func(*v1.PersistentVolume) (*v1.PersistentVolume, error)) {
-	fake.updateMutex.Lock()
-	defer fake.updateMutex.Unlock()
-	fake.UpdateStub = stub
-}
-
 func (fake *FakeK8sPersistentVolumes) UpdateArgsForCall(i int) *v1.PersistentVolume {
 	fake.updateMutex.RLock()
 	defer fake.updateMutex.RUnlock()
-	argsForCall := fake.updateArgsForCall[i]
-	return argsForCall.arg1
+	return fake.updateArgsForCall[i].arg1
 }
 
 func (fake *FakeK8sPersistentVolumes) UpdateReturns(result1 *v1.PersistentVolume, result2 error) {
-	fake.updateMutex.Lock()
-	defer fake.updateMutex.Unlock()
 	fake.UpdateStub = nil
 	fake.updateReturns = struct {
 		result1 *v1.PersistentVolume
@@ -566,8 +224,6 @@ func (fake *FakeK8sPersistentVolumes) UpdateReturns(result1 *v1.PersistentVolume
 }
 
 func (fake *FakeK8sPersistentVolumes) UpdateReturnsOnCall(i int, result1 *v1.PersistentVolume, result2 error) {
-	fake.updateMutex.Lock()
-	defer fake.updateMutex.Unlock()
 	fake.UpdateStub = nil
 	if fake.updateReturnsOnCall == nil {
 		fake.updateReturnsOnCall = make(map[int]struct {
@@ -595,8 +251,7 @@ func (fake *FakeK8sPersistentVolumes) UpdateStatus(arg1 *v1.PersistentVolume) (*
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.updateStatusReturns
-	return fakeReturns.result1, fakeReturns.result2
+	return fake.updateStatusReturns.result1, fake.updateStatusReturns.result2
 }
 
 func (fake *FakeK8sPersistentVolumes) UpdateStatusCallCount() int {
@@ -605,22 +260,13 @@ func (fake *FakeK8sPersistentVolumes) UpdateStatusCallCount() int {
 	return len(fake.updateStatusArgsForCall)
 }
 
-func (fake *FakeK8sPersistentVolumes) UpdateStatusCalls(stub func(*v1.PersistentVolume) (*v1.PersistentVolume, error)) {
-	fake.updateStatusMutex.Lock()
-	defer fake.updateStatusMutex.Unlock()
-	fake.UpdateStatusStub = stub
-}
-
 func (fake *FakeK8sPersistentVolumes) UpdateStatusArgsForCall(i int) *v1.PersistentVolume {
 	fake.updateStatusMutex.RLock()
 	defer fake.updateStatusMutex.RUnlock()
-	argsForCall := fake.updateStatusArgsForCall[i]
-	return argsForCall.arg1
+	return fake.updateStatusArgsForCall[i].arg1
 }
 
 func (fake *FakeK8sPersistentVolumes) UpdateStatusReturns(result1 *v1.PersistentVolume, result2 error) {
-	fake.updateStatusMutex.Lock()
-	defer fake.updateStatusMutex.Unlock()
 	fake.UpdateStatusStub = nil
 	fake.updateStatusReturns = struct {
 		result1 *v1.PersistentVolume
@@ -629,8 +275,6 @@ func (fake *FakeK8sPersistentVolumes) UpdateStatusReturns(result1 *v1.Persistent
 }
 
 func (fake *FakeK8sPersistentVolumes) UpdateStatusReturnsOnCall(i int, result1 *v1.PersistentVolume, result2 error) {
-	fake.updateStatusMutex.Lock()
-	defer fake.updateStatusMutex.Unlock()
 	fake.UpdateStatusStub = nil
 	if fake.updateStatusReturnsOnCall == nil {
 		fake.updateStatusReturnsOnCall = make(map[int]struct {
@@ -644,22 +288,222 @@ func (fake *FakeK8sPersistentVolumes) UpdateStatusReturnsOnCall(i int, result1 *
 	}{result1, result2}
 }
 
-func (fake *FakeK8sPersistentVolumes) Watch(arg1 v1a.ListOptions) (watch.Interface, error) {
-	fake.watchMutex.Lock()
-	ret, specificReturn := fake.watchReturnsOnCall[len(fake.watchArgsForCall)]
-	fake.watchArgsForCall = append(fake.watchArgsForCall, struct {
-		arg1 v1a.ListOptions
-	}{arg1})
-	fake.recordInvocation("Watch", []interface{}{arg1})
-	fake.watchMutex.Unlock()
-	if fake.WatchStub != nil {
-		return fake.WatchStub(arg1)
+func (fake *FakeK8sPersistentVolumes) Delete(name string, options *metav1.DeleteOptions) error {
+	fake.deleteMutex.Lock()
+	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
+	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
+		name    string
+		options *metav1.DeleteOptions
+	}{name, options})
+	fake.recordInvocation("Delete", []interface{}{name, options})
+	fake.deleteMutex.Unlock()
+	if fake.DeleteStub != nil {
+		return fake.DeleteStub(name, options)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.deleteReturns.result1
+}
+
+func (fake *FakeK8sPersistentVolumes) DeleteCallCount() int {
+	fake.deleteMutex.RLock()
+	defer fake.deleteMutex.RUnlock()
+	return len(fake.deleteArgsForCall)
+}
+
+func (fake *FakeK8sPersistentVolumes) DeleteArgsForCall(i int) (string, *metav1.DeleteOptions) {
+	fake.deleteMutex.RLock()
+	defer fake.deleteMutex.RUnlock()
+	return fake.deleteArgsForCall[i].name, fake.deleteArgsForCall[i].options
+}
+
+func (fake *FakeK8sPersistentVolumes) DeleteReturns(result1 error) {
+	fake.DeleteStub = nil
+	fake.deleteReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeK8sPersistentVolumes) DeleteReturnsOnCall(i int, result1 error) {
+	fake.DeleteStub = nil
+	if fake.deleteReturnsOnCall == nil {
+		fake.deleteReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deleteReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeK8sPersistentVolumes) DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error {
+	fake.deleteCollectionMutex.Lock()
+	ret, specificReturn := fake.deleteCollectionReturnsOnCall[len(fake.deleteCollectionArgsForCall)]
+	fake.deleteCollectionArgsForCall = append(fake.deleteCollectionArgsForCall, struct {
+		options     *metav1.DeleteOptions
+		listOptions metav1.ListOptions
+	}{options, listOptions})
+	fake.recordInvocation("DeleteCollection", []interface{}{options, listOptions})
+	fake.deleteCollectionMutex.Unlock()
+	if fake.DeleteCollectionStub != nil {
+		return fake.DeleteCollectionStub(options, listOptions)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.deleteCollectionReturns.result1
+}
+
+func (fake *FakeK8sPersistentVolumes) DeleteCollectionCallCount() int {
+	fake.deleteCollectionMutex.RLock()
+	defer fake.deleteCollectionMutex.RUnlock()
+	return len(fake.deleteCollectionArgsForCall)
+}
+
+func (fake *FakeK8sPersistentVolumes) DeleteCollectionArgsForCall(i int) (*metav1.DeleteOptions, metav1.ListOptions) {
+	fake.deleteCollectionMutex.RLock()
+	defer fake.deleteCollectionMutex.RUnlock()
+	return fake.deleteCollectionArgsForCall[i].options, fake.deleteCollectionArgsForCall[i].listOptions
+}
+
+func (fake *FakeK8sPersistentVolumes) DeleteCollectionReturns(result1 error) {
+	fake.DeleteCollectionStub = nil
+	fake.deleteCollectionReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeK8sPersistentVolumes) DeleteCollectionReturnsOnCall(i int, result1 error) {
+	fake.DeleteCollectionStub = nil
+	if fake.deleteCollectionReturnsOnCall == nil {
+		fake.deleteCollectionReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deleteCollectionReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeK8sPersistentVolumes) Get(name string, options metav1.GetOptions) (*v1.PersistentVolume, error) {
+	fake.getMutex.Lock()
+	ret, specificReturn := fake.getReturnsOnCall[len(fake.getArgsForCall)]
+	fake.getArgsForCall = append(fake.getArgsForCall, struct {
+		name    string
+		options metav1.GetOptions
+	}{name, options})
+	fake.recordInvocation("Get", []interface{}{name, options})
+	fake.getMutex.Unlock()
+	if fake.GetStub != nil {
+		return fake.GetStub(name, options)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.watchReturns
-	return fakeReturns.result1, fakeReturns.result2
+	return fake.getReturns.result1, fake.getReturns.result2
+}
+
+func (fake *FakeK8sPersistentVolumes) GetCallCount() int {
+	fake.getMutex.RLock()
+	defer fake.getMutex.RUnlock()
+	return len(fake.getArgsForCall)
+}
+
+func (fake *FakeK8sPersistentVolumes) GetArgsForCall(i int) (string, metav1.GetOptions) {
+	fake.getMutex.RLock()
+	defer fake.getMutex.RUnlock()
+	return fake.getArgsForCall[i].name, fake.getArgsForCall[i].options
+}
+
+func (fake *FakeK8sPersistentVolumes) GetReturns(result1 *v1.PersistentVolume, result2 error) {
+	fake.GetStub = nil
+	fake.getReturns = struct {
+		result1 *v1.PersistentVolume
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeK8sPersistentVolumes) GetReturnsOnCall(i int, result1 *v1.PersistentVolume, result2 error) {
+	fake.GetStub = nil
+	if fake.getReturnsOnCall == nil {
+		fake.getReturnsOnCall = make(map[int]struct {
+			result1 *v1.PersistentVolume
+			result2 error
+		})
+	}
+	fake.getReturnsOnCall[i] = struct {
+		result1 *v1.PersistentVolume
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeK8sPersistentVolumes) List(opts metav1.ListOptions) (*v1.PersistentVolumeList, error) {
+	fake.listMutex.Lock()
+	ret, specificReturn := fake.listReturnsOnCall[len(fake.listArgsForCall)]
+	fake.listArgsForCall = append(fake.listArgsForCall, struct {
+		opts metav1.ListOptions
+	}{opts})
+	fake.recordInvocation("List", []interface{}{opts})
+	fake.listMutex.Unlock()
+	if fake.ListStub != nil {
+		return fake.ListStub(opts)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.listReturns.result1, fake.listReturns.result2
+}
+
+func (fake *FakeK8sPersistentVolumes) ListCallCount() int {
+	fake.listMutex.RLock()
+	defer fake.listMutex.RUnlock()
+	return len(fake.listArgsForCall)
+}
+
+func (fake *FakeK8sPersistentVolumes) ListArgsForCall(i int) metav1.ListOptions {
+	fake.listMutex.RLock()
+	defer fake.listMutex.RUnlock()
+	return fake.listArgsForCall[i].opts
+}
+
+func (fake *FakeK8sPersistentVolumes) ListReturns(result1 *v1.PersistentVolumeList, result2 error) {
+	fake.ListStub = nil
+	fake.listReturns = struct {
+		result1 *v1.PersistentVolumeList
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeK8sPersistentVolumes) ListReturnsOnCall(i int, result1 *v1.PersistentVolumeList, result2 error) {
+	fake.ListStub = nil
+	if fake.listReturnsOnCall == nil {
+		fake.listReturnsOnCall = make(map[int]struct {
+			result1 *v1.PersistentVolumeList
+			result2 error
+		})
+	}
+	fake.listReturnsOnCall[i] = struct {
+		result1 *v1.PersistentVolumeList
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeK8sPersistentVolumes) Watch(opts metav1.ListOptions) (watch.Interface, error) {
+	fake.watchMutex.Lock()
+	ret, specificReturn := fake.watchReturnsOnCall[len(fake.watchArgsForCall)]
+	fake.watchArgsForCall = append(fake.watchArgsForCall, struct {
+		opts metav1.ListOptions
+	}{opts})
+	fake.recordInvocation("Watch", []interface{}{opts})
+	fake.watchMutex.Unlock()
+	if fake.WatchStub != nil {
+		return fake.WatchStub(opts)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.watchReturns.result1, fake.watchReturns.result2
 }
 
 func (fake *FakeK8sPersistentVolumes) WatchCallCount() int {
@@ -668,22 +512,13 @@ func (fake *FakeK8sPersistentVolumes) WatchCallCount() int {
 	return len(fake.watchArgsForCall)
 }
 
-func (fake *FakeK8sPersistentVolumes) WatchCalls(stub func(v1a.ListOptions) (watch.Interface, error)) {
-	fake.watchMutex.Lock()
-	defer fake.watchMutex.Unlock()
-	fake.WatchStub = stub
-}
-
-func (fake *FakeK8sPersistentVolumes) WatchArgsForCall(i int) v1a.ListOptions {
+func (fake *FakeK8sPersistentVolumes) WatchArgsForCall(i int) metav1.ListOptions {
 	fake.watchMutex.RLock()
 	defer fake.watchMutex.RUnlock()
-	argsForCall := fake.watchArgsForCall[i]
-	return argsForCall.arg1
+	return fake.watchArgsForCall[i].opts
 }
 
 func (fake *FakeK8sPersistentVolumes) WatchReturns(result1 watch.Interface, result2 error) {
-	fake.watchMutex.Lock()
-	defer fake.watchMutex.Unlock()
 	fake.WatchStub = nil
 	fake.watchReturns = struct {
 		result1 watch.Interface
@@ -692,8 +527,6 @@ func (fake *FakeK8sPersistentVolumes) WatchReturns(result1 watch.Interface, resu
 }
 
 func (fake *FakeK8sPersistentVolumes) WatchReturnsOnCall(i int, result1 watch.Interface, result2 error) {
-	fake.watchMutex.Lock()
-	defer fake.watchMutex.Unlock()
 	fake.WatchStub = nil
 	if fake.watchReturnsOnCall == nil {
 		fake.watchReturnsOnCall = make(map[int]struct {
@@ -707,11 +540,74 @@ func (fake *FakeK8sPersistentVolumes) WatchReturnsOnCall(i int, result1 watch.In
 	}{result1, result2}
 }
 
+func (fake *FakeK8sPersistentVolumes) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1.PersistentVolume, err error) {
+	var dataCopy []byte
+	if data != nil {
+		dataCopy = make([]byte, len(data))
+		copy(dataCopy, data)
+	}
+	fake.patchMutex.Lock()
+	ret, specificReturn := fake.patchReturnsOnCall[len(fake.patchArgsForCall)]
+	fake.patchArgsForCall = append(fake.patchArgsForCall, struct {
+		name         string
+		pt           types.PatchType
+		data         []byte
+		subresources []string
+	}{name, pt, dataCopy, subresources})
+	fake.recordInvocation("Patch", []interface{}{name, pt, dataCopy, subresources})
+	fake.patchMutex.Unlock()
+	if fake.PatchStub != nil {
+		return fake.PatchStub(name, pt, data, subresources...)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.patchReturns.result1, fake.patchReturns.result2
+}
+
+func (fake *FakeK8sPersistentVolumes) PatchCallCount() int {
+	fake.patchMutex.RLock()
+	defer fake.patchMutex.RUnlock()
+	return len(fake.patchArgsForCall)
+}
+
+func (fake *FakeK8sPersistentVolumes) PatchArgsForCall(i int) (string, types.PatchType, []byte, []string) {
+	fake.patchMutex.RLock()
+	defer fake.patchMutex.RUnlock()
+	return fake.patchArgsForCall[i].name, fake.patchArgsForCall[i].pt, fake.patchArgsForCall[i].data, fake.patchArgsForCall[i].subresources
+}
+
+func (fake *FakeK8sPersistentVolumes) PatchReturns(result1 *v1.PersistentVolume, result2 error) {
+	fake.PatchStub = nil
+	fake.patchReturns = struct {
+		result1 *v1.PersistentVolume
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeK8sPersistentVolumes) PatchReturnsOnCall(i int, result1 *v1.PersistentVolume, result2 error) {
+	fake.PatchStub = nil
+	if fake.patchReturnsOnCall == nil {
+		fake.patchReturnsOnCall = make(map[int]struct {
+			result1 *v1.PersistentVolume
+			result2 error
+		})
+	}
+	fake.patchReturnsOnCall[i] = struct {
+		result1 *v1.PersistentVolume
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeK8sPersistentVolumes) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.createMutex.RLock()
 	defer fake.createMutex.RUnlock()
+	fake.updateMutex.RLock()
+	defer fake.updateMutex.RUnlock()
+	fake.updateStatusMutex.RLock()
+	defer fake.updateStatusMutex.RUnlock()
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
 	fake.deleteCollectionMutex.RLock()
@@ -720,19 +616,11 @@ func (fake *FakeK8sPersistentVolumes) Invocations() map[string][][]interface{} {
 	defer fake.getMutex.RUnlock()
 	fake.listMutex.RLock()
 	defer fake.listMutex.RUnlock()
-	fake.patchMutex.RLock()
-	defer fake.patchMutex.RUnlock()
-	fake.updateMutex.RLock()
-	defer fake.updateMutex.RUnlock()
-	fake.updateStatusMutex.RLock()
-	defer fake.updateStatusMutex.RUnlock()
 	fake.watchMutex.RLock()
 	defer fake.watchMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	fake.patchMutex.RLock()
+	defer fake.patchMutex.RUnlock()
+	return fake.invocations
 }
 
 func (fake *FakeK8sPersistentVolumes) recordInvocation(key string, args []interface{}) {

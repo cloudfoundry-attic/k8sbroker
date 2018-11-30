@@ -27,10 +27,10 @@ var _ = Describe("Broker", func() {
 		logger                        lager.Logger
 		ctx                           context.Context
 		fakeStore                     *brokerstorefakes.FakeStore
-		fakeServicesRegistry          *k8sbroker_fake.FakeServicesRegistry
 		fakeK8sClient                 *k8sbroker_fake.FakeK8sClient
 		fakeK8sPersistentVolumes      *k8sbroker_fake.FakeK8sPersistentVolumes
 		fakeK8sPersistentVolumeClaims *k8sbroker_fake.FakeK8sPersistentVolumeClaims
+		fakeServices                  *k8sbroker_fake.FakeServices
 		err                           error
 	)
 
@@ -39,7 +39,6 @@ var _ = Describe("Broker", func() {
 		ctx = context.TODO()
 		fakeOs = &os_fake.FakeOs{}
 		fakeStore = &brokerstorefakes.FakeStore{}
-		fakeServicesRegistry = &k8sbroker_fake.FakeServicesRegistry{}
 
 		fakeK8sClient = &k8sbroker_fake.FakeK8sClient{}
 		fakeK8sCoreV1 := &k8sbroker_fake.FakeK8sCoreV1{}
@@ -48,8 +47,7 @@ var _ = Describe("Broker", func() {
 		fakeK8sClient.CoreV1Returns(fakeK8sCoreV1)
 		fakeK8sCoreV1.PersistentVolumesReturns(fakeK8sPersistentVolumes)
 		fakeK8sCoreV1.PersistentVolumeClaimsReturns(fakeK8sPersistentVolumeClaims)
-
-		fakeServicesRegistry.DriverNameReturns("some-driver-name", nil)
+		fakeServices = &k8sbroker_fake.FakeServices{}
 	})
 
 	Context("when creating first time", func() {
@@ -61,18 +59,24 @@ var _ = Describe("Broker", func() {
 				fakeStore,
 				fakeK8sClient,
 				"some-namespace",
-				fakeServicesRegistry,
+				fakeServices,
 			)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		Context(".Services", func() {
+			BeforeEach(func() {
+				fakeServices.ListReturns(
+					[]brokerapi.Service{
+						{ID: "some-service-1"},
+						{ID: "some-service-2"},
+					})
+			})
 			It("returns services registry broker services", func() {
 				brokerServices := []brokerapi.Service{
 					{ID: "some-service-1"},
 					{ID: "some-service-2"},
 				}
-				fakeServicesRegistry.BrokerServicesReturns(brokerServices)
 				Expect(broker.Services(ctx)).To(Equal(brokerServices))
 			})
 		})
@@ -91,18 +95,11 @@ var _ = Describe("Broker", func() {
 				instanceID = "some-instance-id"
 				configuration = `
         {
-           "name": "k8s-volume",
-           "capacity_range":{
-              "requiredBytes":"2",
-              "limitBytes":"3"
-           },
-           "parameters":{
-						 "share": "/export/some-share",
-						 "server": "10.0.0.5"
-           }
+				 "share": "/export/some-share",
+				 "server": "10.0.0.5"
         }
         `
-				provisionDetails = brokerapi.ProvisionDetails{PlanID: "CSI", RawParameters: json.RawMessage(configuration)}
+				provisionDetails = brokerapi.ProvisionDetails{PlanID: "nfs", RawParameters: json.RawMessage(configuration)}
 				asyncAllowed = false
 				fakeStore.RetrieveInstanceDetailsReturns(brokerstore.ServiceInstance{}, errors.New("not found"))
 			})
@@ -124,7 +121,7 @@ var _ = Describe("Broker", func() {
 			})
 
 			It("should send the request to the k8s client", func() {
-				expectedQuantity, err := resource.ParseQuantity("2")
+				expectedQuantity, err := resource.ParseQuantity("5G")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fakeK8sPersistentVolumes.CreateCallCount()).To(Equal(1))
 				requestVolume := fakeK8sPersistentVolumes.CreateArgsForCall(0)
@@ -133,15 +130,13 @@ var _ = Describe("Broker", func() {
 					APIVersion: "v1",
 				}))
 				Expect(requestVolume.ObjectMeta).To(Equal(metav1.ObjectMeta{
-					Name:   "k8s-volume",
-					Labels: map[string]string{"name": "k8s-volume"},
+					Name:   "some-instance-id",
+					Labels: map[string]string{"name": "some-instance-id"},
 				}))
 				Expect(requestVolume.Spec.AccessModes).To(Equal([]v1.PersistentVolumeAccessMode{v1.ReadWriteMany}))
-				Expect(requestVolume.Spec.Capacity).To(Equal(v1.ResourceList{v1.ResourceStorage: expectedQuantity}))
-				Expect(requestVolume.Spec.PersistentVolumeSource.CSI.Driver).To(Equal("some-driver-name"))
-				Expect(requestVolume.Spec.PersistentVolumeSource.CSI.VolumeHandle).To(MatchRegexp(`[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}`))
-				Expect(requestVolume.Spec.PersistentVolumeSource.CSI.VolumeAttributes).To(HaveKeyWithValue("server", "10.0.0.5"))
-				Expect(requestVolume.Spec.PersistentVolumeSource.CSI.VolumeAttributes).To(HaveKeyWithValue("share", "/export/some-share"))
+				Expect(requestVolume.Spec.Capacity).To(Equal(v1.ResourceList{v1.ResourceName(v1.ResourceStorage): expectedQuantity}))
+				Expect(requestVolume.Spec.PersistentVolumeSource.NFS.Server).To(Equal("10.0.0.5"))
+				Expect(requestVolume.Spec.PersistentVolumeSource.NFS.Path).To(Equal("/export/some-share"))
 			})
 
 			Context("when creating volume returns volume info", func() {
@@ -156,14 +151,15 @@ var _ = Describe("Broker", func() {
 					Expect(fakeK8sPersistentVolumes.CreateCallCount()).To(Equal(1))
 
 					fingerprint := k8sbroker.ServiceFingerPrint{
-						Name:   "k8s-volume",
+						Name:   "some-instance-id",
 						Volume: volInfo,
 					}
 
 					expectedServiceInstance := brokerstore.ServiceInstance{
-						PlanID:             "CSI",
+						PlanID:             "nfs",
 						ServiceFingerPrint: fingerprint,
 					}
+
 					Expect(fakeStore.CreateInstanceDetailsCallCount()).To(Equal(1))
 					fakeInstanceID, fakeServiceInstance := fakeStore.CreateInstanceDetailsArgsForCall(0)
 					Expect(fakeInstanceID).To(Equal(instanceID))
@@ -196,40 +192,11 @@ var _ = Describe("Broker", func() {
 				})
 			})
 
-			Context("create-service was given valid JSON but no 'name'", func() {
-				BeforeEach(func() {
-					configuration := `{}`
-					provisionDetails = brokerapi.ProvisionDetails{PlanID: "CSI", RawParameters: json.RawMessage(configuration)}
-				})
-
-				It("errors", func() {
-					Expect(err).To(Equal(errors.New("config requires a \"name\"")))
-				})
-			})
-
-			Context("create-service was given valid JSON but no 'capacity_range'", func() {
-				BeforeEach(func() {
-					configuration := `{"name": "some-name"}`
-					provisionDetails = brokerapi.ProvisionDetails{PlanID: "CSI", RawParameters: json.RawMessage(configuration)}
-				})
-
-				It("errors", func() {
-					Expect(err).To(Equal(errors.New("config requires a \"capacity_range\"")))
-				})
-			})
-
 			Context("create-service was given valid JSON but no 'server' in parameters", func() {
 				BeforeEach(func() {
 					configuration = `
 					{
-						 "name": "k8s-volume",
-						 "capacity_range":{
-								"requiredBytes":"2",
-								"limitBytes":"3"
-						 },
-						 "parameters":{
-							 "share": "/export/some-share"
-						 }
+						 "share": "/export/some-share"
 					}
 					`
 					provisionDetails = brokerapi.ProvisionDetails{PlanID: "CSI", RawParameters: json.RawMessage(configuration)}
@@ -244,14 +211,7 @@ var _ = Describe("Broker", func() {
 				BeforeEach(func() {
 					configuration = `
 					{
-						 "name": "k8s-volume",
-						 "capacity_range":{
-								"requiredBytes":"2",
-								"limitBytes":"3"
-						 },
-						 "parameters":{
-							 "server": "10.0.0.5"
-						 }
+						 "server": "10.0.0.5"
 					}
 					`
 					provisionDetails = brokerapi.ProvisionDetails{PlanID: "CSI", RawParameters: json.RawMessage(configuration)}
@@ -274,7 +234,7 @@ var _ = Describe("Broker", func() {
 				It("should delete the persistent volume", func() {
 					Expect(fakeK8sPersistentVolumes.DeleteCallCount()).To(Equal(1))
 					volumeName, deleteOptions := fakeK8sPersistentVolumes.DeleteArgsForCall(0)
-					Expect(volumeName).To(Equal("k8s-volume"))
+					Expect(volumeName).To(Equal("some-instance-id"))
 					Expect(deleteOptions).To(Equal(&metav1.DeleteOptions{
 						TypeMeta: metav1.TypeMeta{
 							Kind:       "PersistentVolume",
@@ -296,7 +256,7 @@ var _ = Describe("Broker", func() {
 				It("should delete the persistent volume", func() {
 					Expect(fakeK8sPersistentVolumes.DeleteCallCount()).To(Equal(1))
 					volumeName, deleteOptions := fakeK8sPersistentVolumes.DeleteArgsForCall(0)
-					Expect(volumeName).To(Equal("k8s-volume"))
+					Expect(volumeName).To(Equal("some-instance-id"))
 					Expect(deleteOptions).To(Equal(&metav1.DeleteOptions{
 						TypeMeta: metav1.TypeMeta{
 							Kind:       "PersistentVolume",
@@ -355,15 +315,15 @@ var _ = Describe("Broker", func() {
 					asyncAllowed = false
 
 					fingerprint := k8sbroker.ServiceFingerPrint{
-						Name: "k8s-volume",
+						Name: "some-instance-id",
 						Volume: &v1.PersistentVolume{
 							TypeMeta: metav1.TypeMeta{
 								Kind:       "PersistentVolume",
 								APIVersion: "v1",
 							},
 							ObjectMeta: metav1.ObjectMeta{
-								Name:   "k8s-volume",
-								Labels: map[string]string{"name": "k8s-volume"},
+								Name:   "some-instance-id",
+								Labels: map[string]string{"name": "some-instance-id"},
 							},
 						},
 					}
@@ -393,7 +353,7 @@ var _ = Describe("Broker", func() {
 				It("should send the request to the k8s client", func() {
 					Expect(fakeK8sPersistentVolumes.DeleteCallCount()).To(Equal(1))
 					volumeName, deleteOptions := fakeK8sPersistentVolumes.DeleteArgsForCall(0)
-					Expect(volumeName).To(Equal("k8s-volume"))
+					Expect(volumeName).To(Equal("some-instance-id"))
 					Expect(deleteOptions).To(Equal(&metav1.DeleteOptions{
 						TypeMeta: metav1.TypeMeta{
 							Kind:       "PersistentVolume",
@@ -510,15 +470,15 @@ var _ = Describe("Broker", func() {
 					quantity, err = resource.ParseQuantity("2")
 					Expect(err).NotTo(HaveOccurred())
 					fingerprint := k8sbroker.ServiceFingerPrint{
-						Name: "k8s-volume",
+						Name: "some-instance-id",
 						Volume: &v1.PersistentVolume{
 							TypeMeta: metav1.TypeMeta{
 								Kind:       "PersistentVolume",
 								APIVersion: "v1",
 							},
 							ObjectMeta: metav1.ObjectMeta{
-								Name:   "k8s-volume",
-								Labels: map[string]string{"name": "k8s-volume"},
+								Name:   "some-instance-id",
+								Labels: map[string]string{"name": "some-instance-id"},
 							},
 							Spec: v1.PersistentVolumeSpec{
 								AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteMany},
@@ -608,7 +568,7 @@ var _ = Describe("Broker", func() {
 							APIVersion: "v1",
 						},
 						ObjectMeta: metav1.ObjectMeta{
-							Name: "k8s-volume",
+							Name: "some-instance-id",
 						},
 
 						Spec: v1.PersistentVolumeClaimSpec{
@@ -619,7 +579,7 @@ var _ = Describe("Broker", func() {
 									{
 										Key:      "name",
 										Operator: metav1.LabelSelectorOpIn,
-										Values:   []string{"k8s-volume"},
+										Values:   []string{"some-instance-id"},
 									},
 								},
 							},
@@ -713,15 +673,15 @@ var _ = Describe("Broker", func() {
 
 			BeforeEach(func() {
 				fingerprint := k8sbroker.ServiceFingerPrint{
-					Name: "k8s-volume",
+					Name: "some-instance-id",
 					Volume: &v1.PersistentVolume{
 						TypeMeta: metav1.TypeMeta{
 							Kind:       "PersistentVolume",
 							APIVersion: "v1",
 						},
 						ObjectMeta: metav1.ObjectMeta{
-							Name:   "k8s-volume",
-							Labels: map[string]string{"name": "k8s-volume"},
+							Name:   "some-instance-id",
+							Labels: map[string]string{"name": "some-instance-id"},
 						},
 					},
 				}
@@ -750,7 +710,7 @@ var _ = Describe("Broker", func() {
 			It("deletes the persistent volume claim", func() {
 				Expect(fakeK8sPersistentVolumeClaims.DeleteCallCount()).To(Equal(1))
 				claimName, deleteOptions := fakeK8sPersistentVolumeClaims.DeleteArgsForCall(0)
-				Expect(claimName).To(Equal("k8s-volume"))
+				Expect(claimName).To(Equal("some-instance-id"))
 				Expect(deleteOptions).To(Equal(&metav1.DeleteOptions{}))
 			})
 
