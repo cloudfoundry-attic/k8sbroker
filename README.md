@@ -1,6 +1,6 @@
 # k8sbroker
 
-This is a generic K8s service broker that provisions nfs volumes for applications pushed to an Eirini deployment of Cloud Foundry.
+This is a generic K8s service broker that provisions nfs volumes for applications pushed to an Eirini-flavored deployment of Cloud Foundry.
 
 ## Deploying the k8sbroker
 
@@ -30,5 +30,3 @@ $ cf create-service nfs Existing mynfs -c '{"server":"<server>", "share":"<share
 $ cf bind-service pora mynfs
 $ cf start pora
 ```
-
-Refer to: [k8s-volume-release](https://github.com/cloudfoundry/k8s-volume-release) for more information.
